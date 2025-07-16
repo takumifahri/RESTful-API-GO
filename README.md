@@ -53,3 +53,40 @@ Proyek ini menggunakan struktur direktori yang umum digunakan dalam pengembangan
 -   **`GET /clothes`**: Mengambil semua data produk pakaian.
     -   **Query Param `TypeClothes`** (opsional): Filter produk berdasarkan tipe (misal: `shirt`, `pants`).
     -   Contoh: `http://localhost:8081/clothes?TypeClothes=shirt`
+
+## Tips dan Trik Go
+
+Berikut adalah beberapa konsep dan konvensi penting dalam Go yang digunakan dalam proyek ini:
+
+### 1. Visibilitas: Public (Exported) vs. Private (Unexported)
+
+Go tidak menggunakan kata kunci seperti `public` atau `private`. Visibilitas (apakah sesuatu dapat diakses dari package lain) ditentukan oleh **kapitalisasi nama**:
+
+-   **Huruf Kapital di Awal (PascalCase)**: Berarti **Public** atau **Exported**. Ini membuatnya bisa diakses dari package lain.
+    -   Contoh: `rest.LoadRoutes(...)`, `models.ProductClothes`, `repository.GetRepository(...)`.
+
+-   **Huruf Kecil di Awal (camelCase)**: Berarti **Private** atau **Unexported**. Ini membuatnya hanya bisa diakses di dalam package yang sama.
+    -   Contoh: `type menuRepo struct` di dalam package `repository`. Struct ini tidak bisa diakses langsung dari package `main`.
+
+Ini berlaku untuk nama `struct`, `interface`, `function`, `method`, dan `variable` di level package.
+
+### 2. Error Handling
+
+Pola umum di Go adalah mengembalikan `error` sebagai nilai terakhir dari sebuah fungsi. Pemanggilan fungsi tersebut harus selalu diikuti dengan pengecekan `if err != nil`.
+
+```go
+data, err := someFunction()
+if err != nil {
+    // Handle error di sini
+    return err
+}
+// Lanjutkan proses jika tidak ada error
+```
+
+### 3. Formatting Otomatis dengan `go fmt`
+
+Go memiliki tool bawaan untuk memformat kode secara konsisten. Selalu jalankan perintah ini dari direktori root proyek Anda sebelum melakukan commit untuk menjaga kerapian kode:
+
+```sh
+go fmt ./...
+```
