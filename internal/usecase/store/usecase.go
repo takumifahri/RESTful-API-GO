@@ -3,5 +3,7 @@ package store
 import "github.com/takumifahri/RESTful-API-GO/internal/models"
 
 type Usecase interface {
-	GetAllCatalog(tipe string) ([]models.ProductClothes, error)
+	GetAllCatalogList(tipe string) ([]models.ProductClothes, error)
+	Order(request models.OrderMenuRequest) (models.Order, error)
+	GetOrderInfo(request models.GetOrderInfoRequest) (models.Order, error)
 }

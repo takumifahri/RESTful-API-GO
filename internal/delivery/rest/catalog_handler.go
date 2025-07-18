@@ -12,7 +12,7 @@ func (h *handler) GetAllCatalog(c echo.Context) error {
 
 	// Params 
 	clothesType := c.QueryParam("TypeClothes")
-	catalogData, err := h.storeUsecase.GetAllCatalog(clothesType)
+	catalogData, err := h.storeUsecase.GetAllCatalogList(clothesType)
 	if err != nil {
 		fmt.Printf("Error fetching catalog %s\n", err.Error())
 

@@ -90,3 +90,33 @@ Go memiliki tool bawaan untuk memformat kode secara konsisten. Selalu jalankan p
 ```sh
 go fmt ./...
 ```
+
+
+### 4. Perintah-Perintah Berguna
+
+Berikut adalah cara menggunakan berbagai perintah untuk mengelola aplikasi:
+
+**Menjalankan server (default):**
+```sh
+go run cmd/main.go
+```
+
+**Menjalankan migrasi:**
+```sh
+go run cmd/main.go -migrate
+```
+
+**Reset database (seperti migrate:fresh):**
+```sh
+go run cmd/main.go --reset
+```
+
+**Reset database dan isi data (seperti migrate:fresh --seed):**
+```sh
+go run cmd/main.go --fresh --seed
+```
+
+**Hanya mengisi data (jika tabel kosong):**
+```sh
+go run cmd/main.go --seed
+```

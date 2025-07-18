@@ -15,7 +15,7 @@ func GetRepository(db *gorm.DB) Repository {
 	}
 }
 
-func (m *menuRepo) GetAllCatalog(tipe string) ([]models.ProductClothes, error) {
+func (m *menuRepo) GetAllCatalogList(tipe string) ([]models.ProductClothes, error) {
     var catalogData []models.ProductClothes
 
     // Mulai dengan query dasar tanpa filter
@@ -31,4 +31,14 @@ func (m *menuRepo) GetAllCatalog(tipe string) ([]models.ProductClothes, error) {
         return nil, err
     }
     return catalogData, nil
+}
+
+func (m *menuRepo) GetAllCatalog(orderCode string) (models.ProductClothes, error) {
+    var productData models.ProductClothes
+
+    // Ambil data produk berdasarkan orderCode
+    if err := m.db.Where("order_code = ?", orderCode).First(&productData).Error; err != nil {
+        return productData, err
+    }
+    return productData, nil
 }
