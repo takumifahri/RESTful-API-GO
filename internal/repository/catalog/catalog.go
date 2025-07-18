@@ -42,3 +42,20 @@ func (m *menuRepo) GetAllCatalog(orderCode string) (models.ProductClothes, error
     }
     return productData, nil
 }
+func (m *menuRepo) GetCatalogByID(UNIQUEID string) (*models.ProductClothes, error) {
+    var catalogData models.ProductClothes
+
+    // Ambil data produk berdasarkan UNIQUEID
+    if err := m.db.Where("unique_id = ?", UNIQUEID).First(&catalogData).Error; err != nil {
+        return nil, err
+    }
+    return &catalogData, nil
+}
+
+func (m *menuRepo) CreateCatalog(catalog models.ProductClothes) error {
+    // Simpan data produk ke database
+    if err := m.db.Create(&catalog).Error; err != nil {
+        return err
+    }
+    return nil
+}

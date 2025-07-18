@@ -8,6 +8,8 @@ import (
     "github.com/labstack/echo/v4"
     "github.com/takumifahri/RESTful-API-GO/internal/database"
     "github.com/takumifahri/RESTful-API-GO/internal/delivery/rest"
+    routers "github.com/takumifahri/RESTful-API-GO/internal/delivery/routes"
+
     strRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/catalog"
     orderRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/order"
     strUsecase "github.com/takumifahri/RESTful-API-GO/internal/usecase/store"
@@ -69,7 +71,7 @@ func main() {
     storeUsecase := strUsecase.GetUsecase(catalogRepo, orderRepository)
     handler := rest.NewHandler(storeUsecase) // Menggunakan NewHandler sesuai kode Anda
 
-    rest.LoadRoutes(e, handler)
+    routers.LoadRoutes(e, handler)
 
     // Logger untuk port nya
     e.Logger.Fatal(e.Start(":8081"))

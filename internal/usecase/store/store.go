@@ -1,6 +1,8 @@
 package store
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
 	"github.com/takumifahri/RESTful-API-GO/internal/models/constant"
@@ -22,6 +24,34 @@ func GetUsecase(menuyRepo catalog.Repository, orderRepo order.Repository) Usecas
 
 func (s *storeUsecase) GetAllCatalogList(tipe string) ([]models.ProductClothes, error) {
 	return s.menuRepo.GetAllCatalogList(tipe)
+}
+func (s *storeUsecase) GetCatalogByID(UNIQUEID string) (*models.ProductClothes, error) {
+	catalogData, err := s.menuRepo.GetCatalogByID(UNIQUEID)
+	if err != nil {
+		return nil, err
+	}
+	if catalogData == nil {
+		return nil, nil // Return nil if no catalog found
+	}
+	return catalogData, nil
+}
+
+func (s *storeUsecase) AddCatalog(catalog models.ProductClothes) (models.ProductClothes, error) {
+    // 1. Generate UUID (ID akan di-handle oleh database)
+    catalog.UNIQUEID = fmt.Sprintf("PRD-%s", uuid.New().String())
+    
+    // 2. Save ke repository
+    if err := s.menuRepo.CreateCatalog(catalog); err != nil {
+        return models.ProductClothes{}, err
+    }
+    
+    // 3. PENTING: Query kembali data yang baru saja disimpan untuk mendapatkan ID yang benar
+    savedCatalog, err := s.menuRepo.GetCatalogByID(catalog.UNIQUEID)
+    if err != nil {
+        return models.ProductClothes{}, err
+    }
+    
+    return *savedCatalog, nil
 }
 
 func (s *storeUsecase) Order(request models.OrderMenuRequest) (models.Order, error) {

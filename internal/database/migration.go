@@ -8,13 +8,20 @@ import (
     "github.com/takumifahri/RESTful-API-GO/internal/models/constant"
     "gorm.io/gorm"
 )
-
+var allModels = []interface{}{
+    &models.ProductClothes{},
+    &models.Order{},
+    &models.ProductOrder{},
+}
 // Migrate hanya menjalankan AutoMigrate
 func Migrate(db *gorm.DB) {
     fmt.Println("Running database migrations...")
     // Menambahkan nama tabel yang dimigrasi
-    fmt.Println("-> Migrating table: product_clothes")
-    err := db.AutoMigrate(&models.ProductClothes{})
+    for _, model := range allModels {
+        tableName := db.NamingStrategy.TableName(fmt.Sprintf("%T", model)[1:])
+        fmt.Printf("-> Dropping table: %s\n", tableName)
+    }
+    err := db.AutoMigrate(allModels...)
     if err != nil {
         fmt.Println("Failed to migrate table:", err)
         return
@@ -26,8 +33,11 @@ func Migrate(db *gorm.DB) {
 func DropTables(db *gorm.DB) {
     fmt.Println("Dropping tables...")
     // Menambahkan nama tabel yang dihapus
-    fmt.Println("-> Dropping table: product_clothes")
-    err := db.Migrator().DropTable(&models.ProductClothes{})
+    for _, model := range allModels {
+        tableName := db.NamingStrategy.TableName(fmt.Sprintf("%T", model)[1:])
+        fmt.Printf("-> Dropping table: %s\n", tableName)
+    }
+    err := db.AutoMigrate(allModels...)
     if err != nil {
         fmt.Println("Failed to drop table:", err)
         return
