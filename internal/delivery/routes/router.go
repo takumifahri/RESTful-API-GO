@@ -9,5 +9,6 @@ func LoadRoutes(e *echo.Echo, handler *rest.Handler) {
 	e.GET("/clothes", handler.GetAllCatalogList)
 	e.GET("/clothes/:unique_id", handler.GetCatalogByID)
 	e.POST("/clothes", handler.AddCatalog)
+	e.PATCH("/clothes/:unique_id", handler.UpdateCatalog)
 	e.POST("/order", handler.Order)
 }

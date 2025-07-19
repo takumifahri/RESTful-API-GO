@@ -1,6 +1,8 @@
 package catalog
 
 import (
+	"errors"
+
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
 	"gorm.io/gorm"
 )
@@ -37,7 +39,7 @@ func (m *menuRepo) GetAllCatalog(orderCode string) (models.ProductClothes, error
     var productData models.ProductClothes
 
     // Ambil data produk berdasarkan orderCode
-    if err := m.db.Where("order_code = ?", orderCode).First(&productData).Error; err != nil {
+    if err := m.db.Where("unique_id = ?", orderCode).First(&productData).Error; err != nil {
         return productData, err
     }
     return productData, nil
@@ -56,6 +58,18 @@ func (m *menuRepo) CreateCatalog(catalog models.ProductClothes) error {
     // Simpan data produk ke database
     if err := m.db.Create(&catalog).Error; err != nil {
         return err
+    }
+    return nil
+}
+
+func (m *menuRepo) UpdateCatalog(uniqueID string, updateData map[string]interface{}) error {
+    // GORM akan update hanya field yang ada di map
+    result := m.db.Model(&models.ProductClothes{}).Where("unique_id = ?", uniqueID).Updates(updateData)
+    if result.Error != nil {
+        return result.Error
+    }
+    if result.RowsAffected == 0 {
+        return errors.New("catalog not found")
     }
     return nil
 }

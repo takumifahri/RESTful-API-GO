@@ -11,9 +11,9 @@ const (
 )
 
 const (
-	ProductOrderStatusPending    models.ProductORderStatus = "pending"
-	ProductOrderStatusProcessing models.ProductORderStatus = "processing"
-	ProductOrderStatusCompleted  models.ProductORderStatus = "completed"
-	ProductOrderStatusCancelled  models.ProductORderStatus = "cancelled"
-	ProductOrderStatusFailed     models.ProductORderStatus = "failed"
+	ProductOrderStatusPending    models.ProductOrderStatus = "pending"
+	ProductOrderStatusProcessing models.ProductOrderStatus = "processing"
+	ProductOrderStatusCompleted  models.ProductOrderStatus = "completed"
+	ProductOrderStatusCancelled  models.ProductOrderStatus = "cancelled"
+	ProductOrderStatusFailed     models.ProductOrderStatus = "failed"
 )

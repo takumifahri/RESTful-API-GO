@@ -7,4 +7,5 @@ type Repository interface {
 	GetAllCatalog(orderCode string) (models.ProductClothes, error)
 	GetCatalogByID(UNIQUEID string) (*models.ProductClothes, error)
 	CreateCatalog(catalog models.ProductClothes) error
+	UpdateCatalog(uniqueID string, updateData map[string]interface{}) error 
 }

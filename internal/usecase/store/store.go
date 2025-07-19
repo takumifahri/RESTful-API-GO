@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -54,38 +55,78 @@ func (s *storeUsecase) AddCatalog(catalog models.ProductClothes) (models.Product
     return *savedCatalog, nil
 }
 
-func (s *storeUsecase) Order(request models.OrderMenuRequest) (models.Order, error) {
-	productOrderData := make([]models.ProductOrder, len(request.OrderProduct))
-
-	//  Kita loop 
-	for i, orderProduct := range request.OrderProduct {
-		menuData, err := s.menuRepo.GetAllCatalog(orderProduct.OrderCode)
-		if err != nil {
-			return models.Order{}, err
-		}
-	
-		productOrderData[i] = models.ProductOrder{
-			OrderID: uuid.New().String(),
-			ProductID: menuData.UNIQUEID,
-			Quantity: orderProduct.Quantity,
-			TotalPrice: menuData.Price * int64(orderProduct.Quantity),
-			Status: constant.ProductOrderStatusPending,
-		}
-	}
-
-	orderData := models.Order{
-		UNIQUEID: uuid.New().String(),
-		Status: constant.OrderStatusPending,
-		ProductOrder: productOrderData,
-	}
-
-	createData, err := s.orderRepo.CreateOrder(orderData)
+func (s *storeUsecase) UpdateCatalog(catalog models.ProductClothes) (models.ProductClothes, error) {
+	// 1. Cek apakah catalog exist
+	existingCatalog, err := s.menuRepo.GetCatalogByID(catalog.UNIQUEID)
 	if err != nil {
-		return models.Order{}, err
+		return models.ProductClothes{}, err
 	}
-	return createData, nil 
-}
+	if existingCatalog == nil {
+		return models.ProductClothes{}, errors.New("catalog not found")
+	}
 
+	// 2. Update data
+	updateData := make(map[string]interface{})
+	updateData["nama_pakaian"] = catalog.NamaPakaian
+	updateData["price"] = catalog.Price
+	updateData["deskripsi"] = catalog.Deskripsi
+	updateData["stock"] = catalog.Stock
+	updateData["type_clothes"] = catalog.TypeClothes
+
+	// 3. Update di repository
+	if err := s.menuRepo.UpdateCatalog(catalog.UNIQUEID, updateData); err != nil {
+		return models.ProductClothes{}, err
+	}
+
+	// 4. Return updated data
+	updatedCatalog, err := s.menuRepo.GetCatalogByID(catalog.UNIQUEID)
+	if err != nil {
+		return models.ProductClothes{}, err
+	}
+
+	return *updatedCatalog, nil
+}
+func (s *storeUsecase) Order(request models.OrderMenuRequest) (models.Order, error) {
+    productOrderData := make([]models.ProductOrder, len(request.OrderProduct))
+
+    // Generate Order UNIQUEID sekali di awal
+    orderUniqueID := "ORD-" + uuid.New().String()
+
+    //  Kita loop 
+    for i, orderProduct := range request.OrderProduct {
+        // Gunakan GetCatalogByID untuk UNIQUEID
+        menuData, err := s.menuRepo.GetCatalogByID(orderProduct.ProductID)
+        if err != nil {
+            return models.Order{}, err
+        }
+        
+        // Cek apakah catalog ditemukan
+        if menuData == nil {
+            return models.Order{}, fmt.Errorf("product with ID %s not found", orderProduct.ProductID)
+        }
+    
+        productOrderData[i] = models.ProductOrder{
+            OrderUniqueID: orderUniqueID,              // ✅ GUNAKAN OrderUNIQUEID, bukan OrderID
+            ProductID: menuData.UNIQUEID,              
+            NamaPakaian: menuData.NamaPakaian,         
+            Quantity: int64(orderProduct.Quantity),    // ✅ Convert ke int64
+            TotalPrice: menuData.Price * orderProduct.Quantity,
+            Status: constant.ProductOrderStatusPending,
+        }
+    }
+
+    orderData := models.Order{
+        UNIQUEID: orderUniqueID,                       
+        Status: constant.OrderStatusPending,
+        ProductOrder: productOrderData,
+    }
+
+    createData, err := s.orderRepo.CreateOrder(orderData)
+    if err != nil {
+        return models.Order{}, err
+    }
+    return createData, nil 
+}
 func (s *storeUsecase) GetOrderInfo(request models.GetOrderInfoRequest) (models.Order, error) {
 	orderData, err := s.orderRepo.GetInfoOrder(request.OrderID)
 	if err != nil {
