@@ -86,6 +86,7 @@ func (s *storeUsecase) UpdateCatalog(catalog models.ProductClothes) (models.Prod
 
 	return *updatedCatalog, nil
 }
+
 func (s *storeUsecase) Order(request models.OrderMenuRequest) (models.Order, error) {
     productOrderData := make([]models.ProductOrder, len(request.OrderProduct))
 
