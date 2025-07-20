@@ -139,27 +139,23 @@ go fmt ./...
 
 Berikut adalah cara menggunakan berbagai perintah untuk mengelola aplikasi:
 
-**Menjalankan server (default):**
-```sh
+# 1. Jalankan server biasa
 go run cmd/main.go
-```
 
-**Menjalankan migrasi:**
-```sh
-go run cmd/main.go -migrate
-```
+# 2. Migration saja (create/update tables)
+go run cmd/main.go --migrate
 
-**Reset database (seperti migrate:fresh):**
-```sh
-go run cmd/main.go --reset
-```
+# 3. Migration + seed
+go run cmd/main.go --migrate --seed
 
-**Reset database dan isi data (seperti migrate:fresh --seed):**
-```sh
+# 4. Fresh migration (drop + create tables) - seperti migrate:fresh
+go run cmd/main.go --fresh
+
+# 5. Fresh migration + seed (drop + create + seed) - seperti migrate:fresh --seed
 go run cmd/main.go --fresh --seed
-```
 
-**Hanya mengisi data (jika tabel kosong):**
-```sh
+# 6. Reset database (drop semua tables)
+go run cmd/main.go --reset
+
+# 7. Seed saja (jika tabel sudah ada)
 go run cmd/main.go --seed
-```

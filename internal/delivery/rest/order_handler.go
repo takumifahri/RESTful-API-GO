@@ -36,3 +36,25 @@ func (h *Handler) Order(c echo.Context) error {
 		"data":    orderData,
 	})
 }
+
+func (h *Handler) GetOrderInfo(c echo.Context) error {
+	orderID := c.Param("unique_id")
+
+	orderData, err := h.storeUsecase.GetOrderInfo(models.GetOrderInfoRequest{
+		OrderID: orderID,
+	})
+
+	if err != nil {
+		fmt.Printf("Error fetching order info: %s\n", err.Error())
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": "Failed to fetch order info",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Order info fetched successfully",
+		"data":    orderData,
+	})
+
+}

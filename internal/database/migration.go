@@ -8,19 +8,22 @@ import (
     "github.com/takumifahri/RESTful-API-GO/internal/models/constant"
     "gorm.io/gorm"
 )
+
 var allModels = []interface{}{
     &models.ProductClothes{},
     &models.Order{},
     &models.ProductOrder{},
 }
-// Migrate hanya menjalankan AutoMigrate
+
+// Migrate hanya menjalankan AutoMigrate (create/update tables)
 func Migrate(db *gorm.DB) {
     fmt.Println("Running database migrations...")
-    // Menambahkan nama tabel yang dimigrasi
+    
     for _, model := range allModels {
         tableName := db.NamingStrategy.TableName(fmt.Sprintf("%T", model)[1:])
-        fmt.Printf("-> Dropping table: %s\n", tableName)
+        fmt.Printf("-> Migrating table: %s\n", tableName)
     }
+    
     err := db.AutoMigrate(allModels...)
     if err != nil {
         fmt.Println("Failed to migrate table:", err)
@@ -29,42 +32,55 @@ func Migrate(db *gorm.DB) {
     fmt.Println("Migrations completed successfully.")
 }
 
-// DropTables menghapus tabel
+// DropTables benar-benar DROP semua tabel (seperti migrate:fresh)
 func DropTables(db *gorm.DB) {
-    fmt.Println("Dropping tables...")
-    // Menambahkan nama tabel yang dihapus
-    for _, model := range allModels {
+    fmt.Println("Dropping all tables...")
+    
+    // Drop dalam urutan terbalik untuk menghindari foreign key constraint
+    modelsReversed := make([]interface{}, len(allModels))
+    for i, model := range allModels {
+        modelsReversed[len(allModels)-1-i] = model
+    }
+    
+    for _, model := range modelsReversed {
         tableName := db.NamingStrategy.TableName(fmt.Sprintf("%T", model)[1:])
         fmt.Printf("-> Dropping table: %s\n", tableName)
+        
+        // Benar-benar DROP table, bukan AutoMigrate
+        err := db.Migrator().DropTable(model)
+        if err != nil {
+            fmt.Printf("Warning: Failed to drop table %s: %v\n", tableName, err)
+        }
     }
-    err := db.AutoMigrate(allModels...)
-    if err != nil {
-        fmt.Println("Failed to drop table:", err)
-        return
-    }
-    fmt.Println("Tables dropped successfully.")
+    
+    fmt.Println("All tables dropped successfully.")
+}
+
+// DropAndMigrate = DropTables + Migrate (untuk fresh migration)
+func DropAndMigrate(db *gorm.DB) {
+    DropTables(db)
+    Migrate(db)
 }
 
 // Seed mengisi database dengan data awal
 func Seed(db *gorm.DB) {
+    fmt.Println("Seeding database...")
+    
     // Cek dulu apakah data sudah ada
     var count int64
     db.Model(&models.ProductClothes{}).Count(&count)
     if count > 0 {
-        // Menambahkan nama tabel di pesan skip
-        fmt.Println("Table 'product_clothes' already seeded. Skipping.")
+        fmt.Println("-> Table 'product_clothes' already has data. Skipping seed.")
         return
     }
 
-    // Menambahkan nama tabel yang di-seed
     fmt.Println("-> Seeding table: product_clothes")
-    ClothesSeed := []models.ProductClothes{
+    clothesSeed := []models.ProductClothes{
         {
-
             UNIQUEID:    fmt.Sprintf("PRD-%s", uuid.New().String()),
             NamaPakaian: "T-Shirt Cotton",
             Price:       200000,
-            Deskripsi:   "T-Shirt nyaman untuk sehari-hamodels",
+            Deskripsi:   "T-Shirt nyaman untuk sehari-hari",
             Stock:       10,
             TypeClothes: constant.SHIRT,
         },
@@ -102,9 +118,16 @@ func Seed(db *gorm.DB) {
         },
     }
 
-    if err := db.Create(&ClothesSeed).Error; err != nil {
+    if err := db.Create(&clothesSeed).Error; err != nil {
         fmt.Println("Failed to seed database:", err)
         return
     }
     fmt.Println("Database seeded successfully.")
+}
+
+// FreshSeed = DropTables + Migrate + Seed (complete fresh start)
+func FreshSeed(db *gorm.DB) {
+    DropTables(db)
+    Migrate(db)
+    Seed(db)
 }

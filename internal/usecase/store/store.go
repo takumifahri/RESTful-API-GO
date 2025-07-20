@@ -120,7 +120,11 @@ func (s *storeUsecase) Order(request models.OrderMenuRequest) (models.Order, err
         UNIQUEID: orderUniqueID,                       
         Status: constant.OrderStatusPending,
         ProductOrder: productOrderData,
+		ReferenceID: request.ReferenceID,
     }
+	if orderData.ReferenceID == "" {
+		return models.Order{}, errors.New("reference ID is required")
+	} 
 
     createData, err := s.orderRepo.CreateOrder(orderData)
     if err != nil {

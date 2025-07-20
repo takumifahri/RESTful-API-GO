@@ -26,7 +26,7 @@ func (or *orderRepo) CreateOrder(order models.Order) (models.Order, error) {
 
 func (or *orderRepo) GetInfoOrder(orderID string) (models.Order, error) {
 	var orderData models.Order // Ambil data order berdasarkan orderID
-	if err := or.db.Where("id = ?", orderID).Preload("ProductOrder").First(&orderData).Error; err != nil {
+	if err := or.db.Where("unique_id = ?", orderID).Preload("ProductOrder").First(&orderData).Error; err != nil {
 		return orderData, err
 	}
 	return orderData, nil

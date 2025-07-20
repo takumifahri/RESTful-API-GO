@@ -6,6 +6,7 @@ type Order struct {
     UNIQUEID		string `gorm:"unique;not null;size:255" json:"unique_id"`
     ProductOrder 	[]ProductOrder `json:"product_order"`
     Status 			OrderStatus `json:"status"`
+    ReferenceID     string `gorm:"unique;not null;size:255;" json:"reference_id"` // ini mencegah generals problem
 }
 
 // Fix typo: ProductORderStatus -> ProductOrderStatus
@@ -29,6 +30,7 @@ type OrderMenuProductRequest struct {
 
 type OrderMenuRequest struct {
     OrderProduct 	[]OrderMenuProductRequest `json:"order_product"`
+    ReferenceID     string `json:"reference_id"` // Tambahkan reference ID untuk order
 }
 
 type GetOrderInfoRequest struct {
