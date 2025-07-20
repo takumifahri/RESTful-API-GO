@@ -1,18 +1,19 @@
 package main
 
 import (
-    "flag"
-    "fmt"
-    "os"
+	"flag"
+	"fmt"
+	"os"
 
-    "github.com/labstack/echo/v4"
-    "github.com/takumifahri/RESTful-API-GO/internal/database"
-    "github.com/takumifahri/RESTful-API-GO/internal/delivery/rest"
-    routers "github.com/takumifahri/RESTful-API-GO/internal/delivery/routes"
+	"github.com/labstack/echo/v4"
+	"github.com/takumifahri/RESTful-API-GO/internal/database"
+	"github.com/takumifahri/RESTful-API-GO/internal/delivery/rest"
+	routers "github.com/takumifahri/RESTful-API-GO/internal/delivery/routes"
+	"github.com/takumifahri/RESTful-API-GO/internal/middlewares"
 
-    strRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/catalog"
-    orderRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/order"
-    strUsecase "github.com/takumifahri/RESTful-API-GO/internal/usecase/store"
+	strRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/catalog"
+	orderRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/order"
+	strUsecase "github.com/takumifahri/RESTful-API-GO/internal/usecase/store"
 )
 
 const (
@@ -94,7 +95,8 @@ func main() {
     orderRepository := orderRepo.GetRepository(db)
     storeUsecase := strUsecase.GetUsecase(catalogRepo, orderRepository)
     handler := rest.NewHandler(storeUsecase)
-
+    // kita tambahkan cors nya
+    middlewares.CorsMiddleware(e)
     routers.LoadRoutes(e, handler)
 
     fmt.Println("Server starting on port :8081")

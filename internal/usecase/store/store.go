@@ -141,3 +141,13 @@ func (s *storeUsecase) GetOrderInfo(request models.GetOrderInfoRequest) (models.
 	return orderData, nil
 }
 
+func (s *storeUsecase) AdminGetAllOrder() ([]models.Order, error) {
+    // Tidak perlu parameter, langsung ambil semua
+    orderData, err := s.orderRepo.AdminGetAllOrder()
+    if err != nil {
+        return nil, err
+    }
+
+    return orderData, nil
+}
+

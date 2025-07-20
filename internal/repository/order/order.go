@@ -41,3 +41,15 @@ func (or *orderRepo) GetAllOrder(order models.Order) (models.Order, error) {
 	}
 	return orderData, nil
 }
+
+
+func (or *orderRepo) AdminGetAllOrder() ([]models.Order, error) {
+    var orders []models.Order
+    
+    // Ambil semua order dengan preload ProductOrder
+    if err := or.db.Preload("ProductOrder").Find(&orders).Error; err != nil {
+        return nil, err
+    }
+    
+    return orders, nil
+}

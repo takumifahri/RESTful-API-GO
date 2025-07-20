@@ -1,4 +1,5 @@
 package models
+
 type OrderStatus string
 
 type Order struct {
@@ -35,4 +36,13 @@ type OrderMenuRequest struct {
 
 type GetOrderInfoRequest struct {
     OrderID 		string `json:"order_id"`
+}
+
+type GetAllOrderRequest struct {
+    // Tambahkan field yang diperlukan untuk mendapatkan semua order
+    ProductID       string `json:"product_id"` // Misalnya, jika ingin filter berdasarkan ProductID
+    ReferenceID     string `json:"reference_id"` // Tambahkan reference ID untuk order
+    Quantity        int64 `json:"quantity"` // Tambahkan quantity jika diperlukan
+    TotalPrice      int64 `json:"total_price"` // Tambahkan total price jika diperlukan
+    OrderStatus     OrderStatus `json:"order_status"` // Tambahkan status order jika diperlukan
 }

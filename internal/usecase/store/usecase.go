@@ -9,4 +9,5 @@ type Usecase interface {
 	UpdateCatalog(catalog models.ProductClothes) (models.ProductClothes, error)
 	Order(request models.OrderMenuRequest) (models.Order, error)
 	GetOrderInfo(request models.GetOrderInfoRequest) (models.Order, error)
+ 	AdminGetAllOrder() ([]models.Order, error) // ✅ Tidak perlu parameter
 }

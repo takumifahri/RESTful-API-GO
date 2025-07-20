@@ -58,3 +58,20 @@ func (h *Handler) GetOrderInfo(c echo.Context) error {
 	})
 
 }
+func (h *Handler) AdminGetAllOrder(c echo.Context) error {
+    // Tidak perlu decode request body karena tidak ada parameter
+
+    orderData, err := h.storeUsecase.AdminGetAllOrder()
+    if err != nil {
+        fmt.Printf("Error fetching all orders: %s\n", err.Error())
+        return c.JSON(http.StatusInternalServerError, map[string]string{
+            "message": "Failed to fetch all orders",
+            "error":   err.Error(),
+        })
+    }
+
+    return c.JSON(http.StatusOK, map[string]interface{}{
+        "message": "All orders fetched successfully",
+        "data":    orderData,
+    })
+}

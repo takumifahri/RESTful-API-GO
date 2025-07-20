@@ -7,5 +7,6 @@ type Repository interface {
 	CreateOrder(order models.Order) (models.Order, error)
 	GetAllOrder(order models.Order) (models.Order, error)
 	GetInfoOrder(orderID string) (models.Order, error)
+  	AdminGetAllOrder() ([]models.Order, error) // ✅ Tidak perlu parameter
 }
 
