@@ -5,30 +5,73 @@ Proyek ini adalah sebuah RESTful API yang dibangun menggunakan Go dengan framewo
 ## Struktur Proyek
 
 Proyek ini menggunakan struktur direktori yang umum digunakan dalam pengembangan aplikasi Go untuk memisahkan berbagai lapisan aplikasi.
-
 -   **`cmd/`**: Direktori ini berisi titik masuk utama aplikasi.
-    -   `main.go`: File ini bertanggung jawab untuk menginisialisasi server web Echo, menyambungkan ke database, dan mendaftarkan rute API.
+    -   `main.go`: File ini bertanggung jawab untuk menginisialisasi server web Echo, menyambungkan ke database, dan mendaftarkan rute API. Juga menangani command-line flags untuk migration dan seeding.
 
 -   **`internal/`**: Direktori ini berisi semua logika inti aplikasi yang tidak untuk diekspor ke proyek lain.
     -   **`database/`**: Mengelola semua yang berhubungan dengan database.
-        -   [`database.go`](internal/database/database.go): Berisi fungsi untuk terhubung ke database PostgreSQL.
-        -   [`seed.go`](internal/database/seed.go): Berisi data awal (seed) untuk produk pakaian yang akan dimasukkan ke dalam database saat aplikasi pertama kali dijalankan.
+        -   [`database.go`](internal/database/database.go): Berisi fungsi untuk terhubung ke database PostgreSQL menggunakan GORM.
+        -   [`migration.go`](internal/database/migration.go): Berisi fungsi untuk migrasi database (AutoMigrate), drop tables, dan seeding data awal. Mengelola tabel `product_clothes`, `orders`, dan `product_orders`.
     -   **`delivery/rest/`**: Menangani lapisan presentasi melalui REST API.
-        -   [`handler.go`](internal/delivery/rest/handler.go): Mendefinisikan struct handler dan dependensinya.
-        -   [`catalog_handler.go`](internal/delivery/rest/catalog_handler.go): Berisi implementasi handler untuk endpoint katalog.
-        -   [`router.go`](internal/delivery/rest/router.go): Mengatur rute-rute API dan menghubungkannya dengan handler yang sesuai.
+        -   [`handler.go`](internal/delivery/rest/handler.go): Mendefinisikan struct handler dan dependensinya untuk semua endpoint.
+        -   [`catalog_handler.go`](internal/delivery/rest/catalog_handler.go): Berisi implementasi handler untuk endpoint katalog (GET, POST, PATCH dengan partial update).
+        -   [`order_handler.go`](internal/delivery/rest/order_handler.go): Berisi implementasi handler untuk endpoint pemesanan produk.
+    -   **`delivery/routes/`**: Mengatur routing aplikasi.
+        -   [`router.go`](internal/delivery/routes/router.go): Mengatur rute-rute API dan menghubungkannya dengan handler yang sesuai untuk catalog dan order endpoints.
     -   **`models/`**: Mendefinisikan struktur data (model) dan konstanta.
-        -   [`catalog.go`](internal/models/catalog.go): Mendefinisikan struct `ProductClothes` yang merepresentasikan data produk.
+        -   [`catalog.go`](internal/models/catalog.go): Mendefinisikan struct `ProductClothes` dengan GORM tags dan validasi untuk produk pakaian.
+        -   [`order.go`](internal/models/order.go): Mendefinisikan struct `Order`, `ProductOrder`, dan request models untuk sistem pemesanan.
+        -   [`request.go`](internal/models/request.go): Mendefinisikan struct khusus untuk update requests dengan pointer fields untuk partial updates.
         -   `constant/`: Berisi nilai-nilai konstan yang digunakan di seluruh aplikasi.
-            -   [`catalog.go`](internal/models/constant/catalog.go): Mendefinisikan konstanta untuk tipe-tipe pakaian.
+            -   [`catalog.go`](internal/models/constant/catalog.go): Mendefinisikan konstanta untuk tipe-tipe pakaian (shirt, pants, outerwear, accessories, shoes).
+            -   [`order.go`](internal/models/constant/order.go): Mendefinisikan konstanta untuk status order dan product order (pending, processing, completed, cancelled, failed).
     -   **`repository/`**: Direktori ini berisi logika akses data (Data Access Layer).
         -   `catalog/`: Mengelola query database untuk katalog.
-            -   [`repository.go`](internal/repository/catalog/repository.go): Mendefinisikan interface untuk repository katalog.
-            -   [`catalog.go`](internal/repository/catalog/catalog.go): Implementasi dari interface repository katalog.
+            -   [`repository.go`](internal/repository/catalog/repository.go): Mendefinisikan interface untuk repository katalog dengan CRUD operations.
+            -   [`catalog.go`](internal/repository/catalog/catalog.go): Implementasi repository menggunakan GORM untuk operasi database catalog.
+        -   `order/`: Mengelola query database untuk pemesanan.
+            -   [`repository.go`](internal/repository/order/repository.go): Mendefinisikan interface untuk repository order.
+            -   [`order.go`](internal/repository/order/order.go): Implementasi repository menggunakan GORM untuk operasi database order dengan relasi ke ProductOrder.
     -   **`usecase/`**: Direktori ini berisi logika bisnis aplikasi.
-        -   `store/`: Mengelola logika bisnis untuk fitur toko/katalog.
-            -   [`usecase.go`](internal/usecase/store/usecase.go): Mendefinisikan interface untuk usecase toko.
-            -   [`store.go`](internal/usecase/store/store.go): Implementasi dari interface usecase toko.
+        -   `store/`: Mengelola logika bisnis untuk fitur toko/katalog dan pemesanan.
+            -   [`usecase.go`](internal/usecase/store/usecase.go): Mendefinisikan interface untuk usecase toko dengan method untuk catalog dan order management.
+            -   [`store.go`](internal/usecase/store/store.go): Implementasi logika bisnis untuk catalog CRUD dan order processing dengan UUID generation dan validasi.
+    -   **`utils/`**: Direktori untuk utility functions.
+        -   [`validator.go`](internal/utils/validator.go): Berisi fungsi validasi untuk struct validation dengan support untuk full validation (CREATE) dan partial validation (UPDATE).
+
+### Order Endpoints
+-   **`POST /order`**: Membuat pesanan baru.
+    -   Body: JSON dengan format:
+    ```json
+    {
+        "order_product": [
+            {
+                "product_id": "PRD-unique-id",
+                "quantity": 2
+            }
+        ]
+    }
+    ```
+
+### Database Management
+-   **Migration**: Menggunakan GORM AutoMigrate untuk membuat/update schema
+-   **Seeding**: Data awal untuk testing dan development
+-   **Fresh Migration**: Drop semua tabel dan buat ulang dengan data baru
+
+### Validation
+-   **Struct Validation**: Menggunakan `github.com/go-playground/validator/v10`
+-   **Partial Update Validation**: Validasi khusus untuk update operations
+-   **Business Logic Validation**: Validasi di usecase layer
+
+### UUID Generation
+-   **Unique Product ID**: Setiap produk memiliki unique ID dengan format `PRD-{uuid}`
+-   **Unique Order ID**: Setiap order memiliki unique ID dengan format `ORD-{uuid}`
+
+### Error Handling
+-   **Structured Error Response**: Response error yang konsisten
+-   **Logging**: Error logging untuk debugging
+-   **HTTP Status Codes**: Status code yang sesuai untuk setiap scenario
+
 
 ## Cara Menjalankan
 
