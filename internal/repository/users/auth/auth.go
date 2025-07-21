@@ -3,7 +3,9 @@ package auth
 import (
 	"crypto/aes"
 	"crypto/cipher"
-
+	"crypto/rsa"
+	"time"
+	"fmt"
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
 	"gorm.io/gorm"
 )
@@ -15,6 +17,8 @@ type authRepo struct {
 	memory  uint32
 	threads uint8
 	keylen  uint32
+	signKey  *rsa.PrivateKey
+	expTime time.Duration
 }
 
 func GetRepository(
@@ -24,6 +28,8 @@ func GetRepository(
 	memory uint32,
 	threads uint8,
 	keylen uint32,
+	signKey *rsa.PrivateKey,
+	expTime time.Duration,
 ) (Repository, error) {
 	// TODO: implement AES-GCM cipher initialization with secret
 	block , err := aes.NewCipher([]byte(secret))
@@ -42,6 +48,8 @@ func GetRepository(
 		memory:  memory,
 		threads: threads,
 		keylen:  keylen,
+		signKey: signKey,
+		expTime: expTime,
 	}, nil
 }
 
@@ -52,10 +60,10 @@ func (au *authRepo) RegisterUser(userData models.User) (models.User, error) {
 	return userData, nil
 }
 
-func (au *authRepo) CheckRegistered(Name string) (bool, error) {
+func (au *authRepo) CheckRegistered(Email string) (bool, error) {
 	// ktia ambil data kosongan dari user yakni
 	var userData models.User
-	if err := au.db.Where("name = ?", Name).First(&userData).Error; err != nil {
+	if err := au.db.Where("email = ?", Email).First(&userData).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return false, nil // User tidak ditemukan
 		}
@@ -63,4 +71,51 @@ func (au *authRepo) CheckRegistered(Name string) (bool, error) {
 	}
 
 	return userData.UniqueID != "", nil // Jika UniqueID tidak kosong, berarti user terdaftar
+}
+
+// func (au *authRepo) GetMe(Email string) (models.User, error) {
+// 	var userData models.User
+// 	if err := au.db.Where("email = ?", Email).First(&userData).Error; err != nil {
+// 		return userData, err
+// 	}
+
+// 	return userData, nil
+// }
+
+// func (au *authRepo) VerifyUserLogin(Email, Password string, userData models.User) (bool, error) {
+// 	// Cek email apakah ada
+// 	if Email != userData.Email {
+// 		return false, nil
+// 	}
+
+// 	// Hashed atau enkripsi si password apakah sama atau tidak
+// 	verified, err := au.comparePassword(Password, userData.Hash)
+// 	if err != nil {
+// 		return false, err
+// 	}
+
+// 	return verified, nil
+// }
+
+
+func (au *authRepo) GetMe(email string) (models.User, error) {
+    var userData models.User
+    
+    if err := au.db.Where("email = ?", email).First(&userData).Error; err != nil {
+        fmt.Println("❌ REPO ERROR: User not found:", err)
+        return userData, err
+    }
+    
+    return userData, nil
+}
+
+func (au *authRepo) VerifyUserLogin(email, password string, userData models.User) (bool, error) {
+    verified, err := au.comparePassword(password, userData.Hash)
+    if err != nil {
+        fmt.Println("❌ REPO ERROR: Compare password failed:", err)
+        return false, err
+    }
+    
+    fmt.Println("✅ REPO DEBUG: Password comparison result:", verified)
+    return verified, nil
 }

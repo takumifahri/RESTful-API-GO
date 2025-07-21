@@ -7,18 +7,23 @@ import (
 )
 
 func LoadRoutes(e *echo.Echo, handler *rest.Handler, authHandler *user.AuthHandler) {
+	// Grouping
+	catalogGroup := e.Group("/catalog")
+	orderGroup := e.Group("/order")
+	authGroup := e.Group("/auth")
 	// Catalog
-	e.GET("/clothes", handler.GetAllCatalogList)
-	e.GET("/clothes/:unique_id", handler.GetCatalogByID)
-	e.POST("/clothes", handler.AddCatalog)
-	e.PATCH("/clothes/:unique_id", handler.UpdateCatalog)
+	catalogGroup.GET("", handler.GetAllCatalogList)
+	catalogGroup.GET("/:unique_id", handler.GetCatalogByID)
+	catalogGroup.POST("", handler.AddCatalog)
+	catalogGroup.PATCH("/:unique_id", handler.UpdateCatalog)
 
 	//Order
-	e.POST("/order", handler.Order)
-	e.GET("/orders", handler.AdminGetAllOrder)
-	e.GET("/order/:unique_id", handler.GetOrderInfo)
+	orderGroup.POST("", handler.Order)
+	orderGroup.GET("", handler.AdminGetAllOrder)
+	orderGroup.GET("/:unique_id", handler.GetOrderInfo)
 
 
 	// auth 
-	e.POST("/auth/register", authHandler.RegisterUser)
+	authGroup.POST("/register", authHandler.RegisterUser)
+	authGroup.POST("/login", authHandler.LoginUser)
 }

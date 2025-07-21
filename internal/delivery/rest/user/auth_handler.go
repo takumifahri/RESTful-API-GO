@@ -46,3 +46,30 @@ func (h *AuthHandler) RegisterUser(c echo.Context) error {
         "data":    userData,
     })
 }
+
+func (h *AuthHandler) LoginUser(c echo.Context) error {
+    var request models.LoginRequest
+
+    err := json.NewDecoder(c.Request().Body).Decode(&request)
+    if err != nil {
+        fmt.Println("Error decoding request body:", err)
+        return c.JSON(http.StatusBadRequest, echo.Map{
+            "message": "Invalid request body",
+            "error":   err.Error(),
+        })
+    } 
+
+    sessionData, err := h.AuthUsecase.LoginUser(request) // ✅ Sekarang bisa akses
+    if err != nil {
+        fmt.Println("Error logging in user:", err)
+        return c.JSON(http.StatusInternalServerError, echo.Map{
+            "message": "Failed to log in user",
+            "error":   err.Error(),
+        })
+    }
+
+    return c.JSON(http.StatusOK, map[string]interface{}{
+        "message": "User logged in successfully",
+        "data":    sessionData,
+    })
+}

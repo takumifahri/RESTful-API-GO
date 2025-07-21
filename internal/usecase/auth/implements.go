@@ -5,10 +5,12 @@ import (
 	// "fmt"
 
 	// "github.com/google/uuid"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
+
 	// "github.com/takumifahri/RESTful-API-GO/internal/models/constant"
 	// "github.com/takumifahri/RESTful-API-GO/internal/repository/catalog"
 	// "github.com/takumifahri/RESTful-API-GO/internal/repository/order"
@@ -60,4 +62,38 @@ func (au *authUsecase) RegisterUser(request models.RegisterRequest) (models.User
 	}
 	fmt.Println("User registered successfully:", userData)
 	return userData, nil
+}
+func (au *authUsecase) LoginUser(request models.LoginRequest) (models.UserSession, error) {
+    fmt.Println("🔍 DEBUG: Starting login for email:", request.Email)
+    
+    fmt.Println("🔍 DEBUG: Getting user data...")
+    userData, err := au.userRepo.GetMe(request.Email)
+    if err != nil {
+        fmt.Println("❌ ERROR getting user data:", err)
+        return models.UserSession{}, err
+    }
+    fmt.Println("✅ DEBUG: User data retrieved:", userData.Name)
+
+    fmt.Println("🔍 DEBUG: Verifying login...")
+    verified, err := au.userRepo.VerifyUserLogin(request.Email, request.Password, userData)
+    if err != nil {
+        fmt.Println("❌ ERROR verifying user login:", err)
+        return models.UserSession{}, err
+    }
+    fmt.Println("✅ DEBUG: Login verified:", verified)
+
+    if !verified {
+        fmt.Println("❌ DEBUG: Invalid credentials")
+        return models.UserSession{}, errors.New("invalid email or password")
+    }
+
+    fmt.Println("🔍 DEBUG: Creating user session...")
+    userSession, err := au.userRepo.CreateUserSession(userData.UniqueID)
+    if err != nil {
+        fmt.Println("❌ ERROR creating user session:", err)
+        return models.UserSession{}, err
+    }
+    fmt.Println("✅ DEBUG: Session created successfully")
+
+    return userSession, nil
 }

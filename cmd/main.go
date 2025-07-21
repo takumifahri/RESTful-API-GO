@@ -1,24 +1,26 @@
 package main
 
 import (
-    "flag"
-    "fmt"
-    "os"
+	"crypto/rand"
+	"crypto/rsa"
+	"flag"
+	"fmt"
+	"os"
+	"time"
 
-    "github.com/labstack/echo/v4"
-    "github.com/takumifahri/RESTful-API-GO/internal/database"
-    "github.com/takumifahri/RESTful-API-GO/internal/delivery/rest"
-    routers "github.com/takumifahri/RESTful-API-GO/internal/delivery/routes"
-    "github.com/takumifahri/RESTful-API-GO/internal/middlewares"
+	"github.com/labstack/echo/v4"
+	"github.com/takumifahri/RESTful-API-GO/internal/database"
+	"github.com/takumifahri/RESTful-API-GO/internal/delivery/rest"
+	routers "github.com/takumifahri/RESTful-API-GO/internal/delivery/routes"
+	"github.com/takumifahri/RESTful-API-GO/internal/middlewares"
 
-    strRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/catalog"
-    orderRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/order"
-    authRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/users/auth"
+	strRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/catalog"
+	orderRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/order"
+	authRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/users/auth"
 
-    strUsecase "github.com/takumifahri/RESTful-API-GO/internal/usecase/store"
-    authUsecase "github.com/takumifahri/RESTful-API-GO/internal/usecase/auth"
-    "github.com/takumifahri/RESTful-API-GO/internal/delivery/rest/user"
-
+	"github.com/takumifahri/RESTful-API-GO/internal/delivery/rest/user"
+	authUsecase "github.com/takumifahri/RESTful-API-GO/internal/usecase/auth"
+	strUsecase "github.com/takumifahri/RESTful-API-GO/internal/usecase/store"
 )
 
 const (
@@ -97,9 +99,14 @@ func main() {
     fmt.Println("No command flags detected, starting server...")
     e := echo.New()
     secret := "AES256Key-32Characters1234567890" // Ganti dengan secret key yang sesuai
+    signKey, err := rsa.GenerateKey(rand.Reader, 4096)
+    if err != nil {
+        fmt.Println("Error generating RSA key:", err)
+        os.Exit(1)
+    }
     catalogRepo := strRepo.GetRepository(db)
     orderRepository := orderRepo.GetRepository(db)
-    authRepos, err := authRepo.GetRepository(db, secret, 1, 64*1024, 4, 32)
+    authRepos, err := authRepo.GetRepository(db, secret, 1, 64*1024, 4, 32, signKey, 100*time.Second)
     if err != nil {
         fmt.Println("Error initializing auth repository:", err)
         os.Exit(1)
