@@ -63,6 +63,53 @@ Proyek ini menggunakan struktur direktori yang umum digunakan dalam pengembangan
         -   [`validator.go`](internal/utils/validator.go): Berisi fungsi validasi untuk struct validation dengan support untuk full validation (CREATE) dan partial validation (UPDATE). Menggunakan `github.com/go-playground/validator/v10`.
         -   [`JWT.go`](internal/utils/JWT.go): Placeholder untuk implementasi JWT token generation dan validation (dalam pengembangan).
 
+## 🗄️ **Struktur Database**
+
+Aplikasi menggunakan **PostgreSQL** dengan **GORM** sebagai ORM dan mengelola tabel-tabel berikut:
+
+### **Tabel `product_clothes`**
+- Primary Key: `id` (auto-increment)
+- Unique Key: `unique_id` (format: PRD-{uuid})
+- Fields: `nama_pakaian`, `price`, `deskripsi`, `stock`, `type_clothes`
+
+### **Tabel `orders`**
+- Primary Key: `id` (auto-increment) 
+- Unique Key: `unique_id` (format: ORD-{uuid})
+- Unique Key: `reference_id` (untuk mencegah duplicate orders)
+- Fields: `status`
+- **Relasi**: Has Many `product_orders`
+
+### **Tabel `product_orders`**
+- Primary Key: `id` (auto-increment)
+- Foreign Key: `order_unique_id` → `orders.unique_id`
+- Fields: `product_id`, `nama_pakaian`, `quantity`, `total_price`, `status`
+
+### **Tabel `users`**
+- Primary Key: `id` (auto-increment)
+- Unique Key: `unique_id` (format: USR-{uuid})
+- Unique Fields: `name`, `email`, `phone`
+- Fields: `hash` (encrypted password), `address`, `roles`
+
+## 🔐 **Security Features**
+
+### **Password Security**
+- **Argon2ID** hashing algorithm (winner of Password Hashing Competition)
+- **AES-GCM** encryption untuk additional layer security
+- **Salt generation** menggunakan crypto/rand
+- **No plaintext password storage** - hanya hash yang disimpan
+
+### **Database Security**
+- **UUID untuk semua identifier** (mencegah enumeration attacks)
+- **Unique constraints** pada field sensitif
+- **Reference ID validation** untuk mencegah duplicate orders
+- **GORM query protection** terhadap SQL injection
+
+### **API Security**
+- **Struct validation** menggunakan validator/v10
+- **Error handling** yang tidak membocorkan informasi sensitif
+- **CORS configuration** untuk cross-origin requests
+- **Type safety** dengan Go's strong typing
+
 ### Order Endpoints
 -   **`POST /order`**: Membuat pesanan baru.
     -   Body: JSON dengan format:
