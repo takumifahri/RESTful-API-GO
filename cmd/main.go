@@ -1,19 +1,24 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"os"
+    "flag"
+    "fmt"
+    "os"
 
-	"github.com/labstack/echo/v4"
-	"github.com/takumifahri/RESTful-API-GO/internal/database"
-	"github.com/takumifahri/RESTful-API-GO/internal/delivery/rest"
-	routers "github.com/takumifahri/RESTful-API-GO/internal/delivery/routes"
-	"github.com/takumifahri/RESTful-API-GO/internal/middlewares"
+    "github.com/labstack/echo/v4"
+    "github.com/takumifahri/RESTful-API-GO/internal/database"
+    "github.com/takumifahri/RESTful-API-GO/internal/delivery/rest"
+    routers "github.com/takumifahri/RESTful-API-GO/internal/delivery/routes"
+    "github.com/takumifahri/RESTful-API-GO/internal/middlewares"
 
-	strRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/catalog"
-	orderRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/order"
-	strUsecase "github.com/takumifahri/RESTful-API-GO/internal/usecase/store"
+    strRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/catalog"
+    orderRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/order"
+    authRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/users/auth"
+
+    strUsecase "github.com/takumifahri/RESTful-API-GO/internal/usecase/store"
+    authUsecase "github.com/takumifahri/RESTful-API-GO/internal/usecase/auth"
+    "github.com/takumifahri/RESTful-API-GO/internal/delivery/rest/user"
+
 )
 
 const (
@@ -91,14 +96,21 @@ func main() {
     // 5. Jika tidak ada flag, jalankan server (perilaku default)
     fmt.Println("No command flags detected, starting server...")
     e := echo.New()
+    secret := "AES256Key-32Characters1234567890" // Ganti dengan secret key yang sesuai
     catalogRepo := strRepo.GetRepository(db)
     orderRepository := orderRepo.GetRepository(db)
+    authRepos, err := authRepo.GetRepository(db, secret, 1, 64*1024, 4, 32)
+    if err != nil {
+        fmt.Println("Error initializing auth repository:", err)
+        os.Exit(1)
+    }
     storeUsecase := strUsecase.GetUsecase(catalogRepo, orderRepository)
-    handler := rest.NewHandler(storeUsecase)
+    authUsecases := authUsecase.GetUsecase(authRepos)
+    handler := rest.NewHandler(storeUsecase, authUsecases)
+    authHandler := user.NewAuthHandler(handler)
     // kita tambahkan cors nya
     middlewares.CorsMiddleware(e)
-    routers.LoadRoutes(e, handler)
-
+    routers.LoadRoutes(e, handler, authHandler)
     fmt.Println("Server starting on port :8081")
     e.Logger.Fatal(e.Start(":8081"))
 }

@@ -1,1 +1,7 @@
 package auth
+
+import "github.com/takumifahri/RESTful-API-GO/internal/models"
+
+type Usecase interface {
+	RegisterUser(request models.RegisterRequest) (models.User, error)
+}

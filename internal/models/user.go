@@ -8,7 +8,6 @@ type User struct {
 	UniqueID 	string `json:"unique_id" gorm:"unique;not null;size:255"`
 	Name 		string `json:"name" gorm:"unique;not null;size:255"`
 	Hash		string `json:"-"`
-	Password 	string `json:"password" gorm:"not null;size:255"`
 	Email 		string `json:"email" gorm:"unique;not null;size:255"`
 	Phone 		int64 	`json:"phone" gorm:"unique;not null;size:255"`
 	Address 	string `json:"address" gorm:"not null;size:255"`
@@ -16,7 +15,10 @@ type User struct {
 }
 
 type RegisterRequest struct {
-	Name		string `json:"name"`
-	Password	string `json:"password"`
+    Name		string `json:"name" validate:"required,min=3,max=50"`
+    Password	string `json:"password" validate:"required,min=6"`  // ✅ Plaintext dari user
+    Email		string `json:"email" validate:"required,email"`
+    Phone		int64  `json:"phone" validate:"required"`
+    Address		string `json:"address" validate:"required,min=10"`
 	// Password	string 	
 }

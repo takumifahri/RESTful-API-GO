@@ -13,6 +13,7 @@ var allModels = []interface{}{
     &models.ProductClothes{},
     &models.Order{},
     &models.ProductOrder{},
+    &models.User{},
 }
 
 // Migrate hanya menjalankan AutoMigrate (create/update tables)

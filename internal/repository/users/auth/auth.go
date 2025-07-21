@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/aes"
 	"crypto/cipher"
 
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
@@ -18,18 +19,30 @@ type authRepo struct {
 
 func GetRepository(
 	db *gorm.DB,
+	secret string,
 	time uint32,
 	memory uint32,
 	threads uint8,
 	keylen uint32,
-) Repository {
+) (Repository, error) {
+	// TODO: implement AES-GCM cipher initialization with secret
+	block , err := aes.NewCipher([]byte(secret))
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
 	return &authRepo{
 		db:      db,
+		gcm:     gcm,
 		time:    time,
 		memory:  memory,
 		threads: threads,
 		keylen:  keylen,
-	}
+	}, nil
 }
 
 func (au *authRepo) RegisterUser(userData models.User) (models.User, error) {
