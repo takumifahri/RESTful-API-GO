@@ -9,4 +9,5 @@ type Repository interface {
 	VerifyUserLogin(Email, Password string, userData models.User) (bool, error)
 	GetMe(Email string) (models.User, error)
 	CreateUserSession(userUniqueID string) (models.UserSession, error) 
+	CheckSession(data models.UserSession) (userUniqueID string, err error)
 }

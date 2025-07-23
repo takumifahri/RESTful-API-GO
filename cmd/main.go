@@ -121,7 +121,7 @@ func main() {
     }
     catalogRepo := strRepo.GetRepository(db)
     orderRepository := orderRepo.GetRepository(db)
-    authRepos, err := authRepo.GetRepository(db, secret, 1, 64*1024, 4, 32, signKey, 100*time.Second)
+    authRepos, err := authRepo.GetRepository(db, secret, 1, 64*1024, 4, 32, signKey, time.Hour)
     if err != nil {
         fmt.Println("Error initializing auth repository:", err)
         os.Exit(1)

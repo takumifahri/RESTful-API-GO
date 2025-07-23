@@ -4,12 +4,15 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/takumifahri/RESTful-API-GO/internal/delivery/rest"
 	"github.com/takumifahri/RESTful-API-GO/internal/delivery/rest/user"
+	"github.com/takumifahri/RESTful-API-GO/internal/middlewares"
 )
 
 func LoadRoutes(e *echo.Echo, handler *rest.Handler, authHandler *user.AuthHandler) {
+	// Middleware
+	authMiddleware := middlewares.GetAuthMiddleware(handler.AuthUsecase)
 	// Grouping
 	catalogGroup := e.Group("/catalog")
-	orderGroup := e.Group("/order")
+	orderGroup := e.Group("/order", authMiddleware.CheckAuth)
 	authGroup := e.Group("/auth")
 	// Catalog
 	catalogGroup.GET("", handler.GetAllCatalogList)

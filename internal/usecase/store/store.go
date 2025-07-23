@@ -117,7 +117,8 @@ func (s *storeUsecase) Order(request models.OrderMenuRequest) (models.Order, err
     }
 
     orderData := models.Order{
-        UNIQUEID: orderUniqueID,                       
+        UNIQUEID: orderUniqueID,      
+		UserUniqueID: request.UserUniqueID,                 
         Status: constant.OrderStatusPending,
         ProductOrder: productOrderData,
 		ReferenceID: request.ReferenceID,
@@ -137,7 +138,9 @@ func (s *storeUsecase) GetOrderInfo(request models.GetOrderInfoRequest) (models.
 	if err != nil {
 		return orderData, err
 	}
-
+	if orderData.UserUniqueID != request.UserUniqueID {
+		return models.Order{}, fmt.Errorf("order with ID %s does not belong to user %s", request.OrderID, request.UserUniqueID)
+	}
 	return orderData, nil
 }
 

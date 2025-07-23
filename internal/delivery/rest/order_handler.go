@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
+	"github.com/takumifahri/RESTful-API-GO/internal/models/constant"
 )
 
 func (h *Handler) Order(c echo.Context) error {
@@ -21,7 +22,15 @@ func (h *Handler) Order(c echo.Context) error {
 		})
 		
 	}
-
+	value := c.Request().Context().Value(constant.AuthcontextKey)
+	fmt.Printf("DEBUG: context value = %#v, type = %T\n", value, value)
+	userUniqueID, ok := value.(string)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": "Unauthorized: key is of invalid type",
+		})
+	}
+	request.UserUniqueID = userUniqueID
 	orderData, err := h.storeUsecase.Order(request)
 	if err != nil {
 		fmt.Printf("Error processing order: %s\n", err.Error())
@@ -39,8 +48,17 @@ func (h *Handler) Order(c echo.Context) error {
 
 func (h *Handler) GetOrderInfo(c echo.Context) error {
 	orderID := c.Param("unique_id")
-
+	value := c.Request().Context().Value(constant.AuthcontextKey)
+	fmt.Printf("DEBUG: context value = %#v, type = %T\n", value, value)
+	userUniqueID, ok := value.(string)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"message": "Unauthorized: key is of invalid type",
+		})
+	}
+	
 	orderData, err := h.storeUsecase.GetOrderInfo(models.GetOrderInfoRequest{
+		UserUniqueID: userUniqueID,
 		OrderID: orderID,
 	})
 

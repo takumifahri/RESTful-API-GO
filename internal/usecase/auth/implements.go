@@ -97,3 +97,14 @@ func (au *authUsecase) LoginUser(request models.LoginRequest) (models.UserSessio
 
     return userSession, nil
 }
+
+
+func (au *authUsecase) CheckSession(data models.UserSession) (userUniqueID string, err error) {
+  	userUniqueID, err = au.userRepo.CheckSession(data)
+	// Debug
+	if err != nil {
+		fmt.Println("❌ ERROR checking session:", err)
+		return "", err
+	}
+	return userUniqueID, nil
+}

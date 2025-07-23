@@ -4,6 +4,7 @@ type OrderStatus string
 
 type Order struct {
     ID          	uint `gorm:"primaryKey" json:"id"`
+    UserUniqueID 	string `json:"user_unique_id"`
     UNIQUEID		string `gorm:"unique;not null;size:255" json:"unique_id"`
     ProductOrder 	[]ProductOrder `json:"product_order"`
     Status 			OrderStatus `json:"status"`
@@ -30,11 +31,13 @@ type OrderMenuProductRequest struct {
 }
 
 type OrderMenuRequest struct {
+    UserUniqueID    string `json:"-"`
     OrderProduct 	[]OrderMenuProductRequest `json:"order_product"`
     ReferenceID     string `json:"reference_id"` // Tambahkan reference ID untuk order
 }
 
 type GetOrderInfoRequest struct {
+    UserUniqueID    string `json:"-"`
     OrderID 		string `json:"order_id"`
 }
 

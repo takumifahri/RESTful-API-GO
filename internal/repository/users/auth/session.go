@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -35,23 +36,24 @@ func (au *authRepo) generateAccessToken(userUniqueID string) (string, error) {
 	return accessJWT.SignedString(au.signKey)
 }
 
-func (au *authRepo) checkSession(data models.UserSession) (userUniqueID string, err error) {
+func (au *authRepo) CheckSession(data models.UserSession) (userUniqueID string, err error) {
 	accessToken, err := jwt.ParseWithClaims(data.JWTToken, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return au.signKey.PublicKey, nil
+		return &au.signKey.PublicKey, nil // pakai pointer
 	})
-
+	fmt.Println("DEBUG: JWTToken =", data.JWTToken)
+	fmt.Printf("DEBUG: signKey.PublicKey type = %T\n", au.signKey.PublicKey)
 	if err != nil {
-		return "", err
+		return " ", err
 	}
 
 	acceessTokenClaims, ok := accessToken.Claims.(*Claims)
 	if !ok || !accessToken.Valid {
-		return "", jwt.NewValidationError("invalid token, unauthorized", jwt.ValidationErrorMalformed)
+		return " ", jwt.NewValidationError("invalid token, unauthorized", jwt.ValidationErrorMalformed)
 	}
-
+	fmt.Println("DEBUG: JWTToken =", data.JWTToken)
 	if accessToken.Valid {
 		return acceessTokenClaims.Subject, nil
 	}
 
-	return "", jwt.NewValidationError("invalid token, unauthorized", jwt.ValidationErrorMalformed)
+	return " ", jwt.NewValidationError("invalid token, unauthorized", jwt.ValidationErrorMalformed)
 }
