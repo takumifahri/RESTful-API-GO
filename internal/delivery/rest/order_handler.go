@@ -6,11 +6,16 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
 	"github.com/takumifahri/RESTful-API-GO/internal/models/constant"
+	"github.com/takumifahri/RESTful-API-GO/internal/tracing"
 )
 
 func (h *Handler) Order(c echo.Context) error {
+	ctx, span := tracing.CreateSpanWrapper(c.Request().Context(), "Order")
+	defer span.End() 
+
 	var request models.OrderMenuRequest
 	// Kita ambil datanya menjadi Json
 	err := json.NewDecoder(c.Request().Body).Decode(&request)
@@ -31,7 +36,7 @@ func (h *Handler) Order(c echo.Context) error {
 		})
 	}
 	request.UserUniqueID = userUniqueID
-	orderData, err := h.storeUsecase.Order(request)
+	orderData, err := h.storeUsecase.Order(ctx, request)
 	if err != nil {
 		fmt.Printf("Error processing order: %s\n", err.Error())
 		return c.JSON(http.StatusInternalServerError, map[string]string{
@@ -47,6 +52,8 @@ func (h *Handler) Order(c echo.Context) error {
 }
 
 func (h *Handler) GetOrderInfo(c echo.Context) error {
+	ctx, span := tracing.CreateSpanWrapper(c.Request().Context(), "GetOrderInfo")
+	defer span.End() // Pastikan span diakhiri
 	orderID := c.Param("unique_id")
 	value := c.Request().Context().Value(constant.AuthcontextKey)
 	fmt.Printf("DEBUG: context value = %#v, type = %T\n", value, value)
@@ -56,18 +63,22 @@ func (h *Handler) GetOrderInfo(c echo.Context) error {
 			"message": "Unauthorized: key is of invalid type",
 		})
 	}
-	
-	orderData, err := h.storeUsecase.GetOrderInfo(models.GetOrderInfoRequest{
+
+	orderData, err := h.storeUsecase.GetOrderInfo(ctx, models.GetOrderInfoRequest{
 		UserUniqueID: userUniqueID,
-		OrderID: orderID,
+		OrderID:     orderID,
 	})
 
 	if err != nil {
-		fmt.Printf("Error fetching order info: %s\n", err.Error())
+		// fmt.Printf("Error fetching order info: %s\n", err.Error())
+		// change to logrus
+		logrus.WithFields(logrus.Fields{
+			"err": err,
+		}).Error("[GetOrderInfo] Error fetching order info")
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"message": "Failed to fetch order info",
 			"error":   err.Error(),
-		})
+		}) // Jangan gunaka loggingg untuk hal data sensitif. contoh password.
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -77,9 +88,11 @@ func (h *Handler) GetOrderInfo(c echo.Context) error {
 
 }
 func (h *Handler) AdminGetAllOrder(c echo.Context) error {
+	ctx, span := tracing.CreateSpanWrapper(c.Request().Context(), "AdminGetAllOrder")
+	defer span.End() // Pastikan span diakhiri
     // Tidak perlu decode request body karena tidak ada parameter
 
-    orderData, err := h.storeUsecase.AdminGetAllOrder()
+    orderData, err := h.storeUsecase.AdminGetAllOrder(ctx)
     if err != nil {
         fmt.Printf("Error fetching all orders: %s\n", err.Error())
         return c.JSON(http.StatusInternalServerError, map[string]string{

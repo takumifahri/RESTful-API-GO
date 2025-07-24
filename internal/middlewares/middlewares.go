@@ -7,6 +7,7 @@ import (
 	"github.com/takumifahri/RESTful-API-GO/internal/models/constant"
 	"github.com/takumifahri/RESTful-API-GO/internal/usecase/auth"
 	"github.com/takumifahri/RESTful-API-GO/internal/utils"
+	"github.com/takumifahri/RESTful-API-GO/internal/tracing"
 	"golang.org/x/net/context"
 )
 
@@ -22,6 +23,8 @@ func GetAuthMiddleware(authUsecase auth.Usecase) *AuthMiddleware {
 }
 
 func (am *AuthMiddleware) CheckAuth(next echo.HandlerFunc) echo.HandlerFunc {
+	ctx, span := tracing.CreateSpanWrapper(context.Background(), "CheckAuth")
+	defer span.End() // Pastikan span diakhiri
 	return func(c echo.Context) error {
 		sessionData, err := utils.GetSessionData(c.Request())
 		if err != nil {
@@ -32,7 +35,7 @@ func (am *AuthMiddleware) CheckAuth(next echo.HandlerFunc) echo.HandlerFunc {
 			} 
 		}
 
-		userUniqueID, err := am.authUsecase.CheckSession(sessionData)
+		userUniqueID, err := am.authUsecase.CheckSession(ctx, sessionData)
 		if err != nil {
 			return &echo.HTTPError{
 				Code:     http.StatusUnauthorized,

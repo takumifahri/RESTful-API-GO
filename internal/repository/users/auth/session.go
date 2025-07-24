@@ -1,19 +1,24 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
+	"github.com/takumifahri/RESTful-API-GO/internal/tracing"
 )
 
 type Claims struct {
 	jwt.StandardClaims
 }
 
-func (au *authRepo) CreateUserSession(userUniqueID string) (models.UserSession, error) {
-	accessToken, err := au.generateAccessToken(userUniqueID)
+func (au *authRepo) CreateUserSession(ctx context.Context, userUniqueID string) (models.UserSession, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "CreateUserSession")
+	defer span.End()
+	// Debug
+	accessToken, err := au.generateAccessToken(ctx, userUniqueID)
 	if err != nil {
 		return models.UserSession{}, err
 	}
@@ -23,11 +28,14 @@ func (au *authRepo) CreateUserSession(userUniqueID string) (models.UserSession, 
 	}, nil
 }
 
-func (au *authRepo) generateAccessToken(userUniqueID string) (string, error) {
+func (au *authRepo) generateAccessToken(ctx context.Context, userUniqueID string) (string, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "generateAccessToken")
+	defer span.End()
+	// Debug
 	expTime := time.Now().Add(au.expTime).Unix() // Token berlaku selama 24 jam
-	accessClaims := Claims {
+	accessClaims := Claims{
 		jwt.StandardClaims{
-			Subject: userUniqueID,
+			Subject:   userUniqueID,
 			ExpiresAt: expTime,
 		},
 	}
@@ -36,7 +44,9 @@ func (au *authRepo) generateAccessToken(userUniqueID string) (string, error) {
 	return accessJWT.SignedString(au.signKey)
 }
 
-func (au *authRepo) CheckSession(data models.UserSession) (userUniqueID string, err error) {
+func (au *authRepo) CheckSession(ctx context.Context, data models.UserSession) (userUniqueID string, err error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "CheckSession")
+	defer span.End()
 	accessToken, err := jwt.ParseWithClaims(data.JWTToken, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return &au.signKey.PublicKey, nil // pakai pointer
 	})

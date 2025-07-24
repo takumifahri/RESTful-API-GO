@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
@@ -8,6 +9,7 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/argon2"
+	"github.com/takumifahri/RESTful-API-GO/internal/tracing"
 )
 
 const (
@@ -15,7 +17,9 @@ const (
 )
 
 // kita akan implemen user hash disini
-func (au *authRepo) GenerateUserHash(password string) (hash string, err error) {
+func (au *authRepo) GenerateUserHash(ctx context.Context,password string) (hash string, err error) {
+	_, span := tracing.CreateSpanWrapper(ctx, "GenerateUserHash")
+	defer span.End()
 	// /Kita akan menggunaakn argon2 utnuk encrypt password mari kita coba intip
 	salt := make([]byte, 16) // Ganti dengan salt yang sesuai
 	if _, err := rand.Read(salt); err != nil {
@@ -23,7 +27,7 @@ func (au *authRepo) GenerateUserHash(password string) (hash string, err error) {
 	}
 	argonHash := argon2.IDKey([]byte(password), salt, au.time, au.memory, au.threads, au.keylen)
 
-	b64Hash := au.encryption(argonHash)
+	b64Hash := au.encryption(ctx, argonHash)
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
 
 	encodedHash := fmt.Sprintf(cryptFormat, argon2.Version, au.memory, au.time, au.threads, b64Salt, b64Hash)
@@ -31,14 +35,18 @@ func (au *authRepo) GenerateUserHash(password string) (hash string, err error) {
 }
 
 // Kita byuat func enkripsi nya
-func (au *authRepo) encryption(text []byte) string {
+func (au *authRepo) encryption(ctx context.Context, text []byte) string {
+	_, span := tracing.CreateSpanWrapper(ctx, "encryption")
+	defer span.End()
 	nonce := make([]byte, au.gcm.NonceSize())
 
 	cipherText := au.gcm.Seal(nonce, nonce, text, nil)
 	return base64.RawStdEncoding.EncodeToString(cipherText)
 }
 
-func (au *authRepo) decrypt(cipherText string) ([]byte, error) {
+func (au *authRepo) decrypt(ctx context.Context, cipherText string) ([]byte, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "decrypt")
+	defer span.End()
 	decode, err := base64.RawStdEncoding.DecodeString(cipherText)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode cipher text: %v", err)
@@ -56,7 +64,9 @@ func (au *authRepo) decrypt(cipherText string) ([]byte, error) {
 	)
 }
 
-func (au *authRepo) comparePassword(password, hash string) (bool,error) {
+func (au *authRepo) comparePassword(ctx context.Context, password, hash string) (bool,error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "comparePassword")
+	defer span.End()
 	parts := strings.Split(hash, "$") // ini akan membagi hash menjadi beberapa bagian
 
 	// variable kosong 
@@ -76,7 +86,7 @@ func (au *authRepo) comparePassword(password, hash string) (bool,error) {
 
 			hash := parts[5]
 
-			decryptHash, err := au.decrypt(hash)
+			decryptHash, err := au.decrypt(ctx, hash)
 			if err != nil {
 				return false, fmt.Errorf("failed to decrypt hash: %v", err)
 			}

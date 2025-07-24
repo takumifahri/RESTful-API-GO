@@ -1,9 +1,12 @@
 package auth
 
-import "github.com/takumifahri/RESTful-API-GO/internal/models"
+import (
+	"github.com/takumifahri/RESTful-API-GO/internal/models"
+	"context"
+)
 
 type Usecase interface {
-	RegisterUser(request models.RegisterRequest) (models.User, error)
-	LoginUser(request models.LoginRequest) (models.UserSession, error)
-	CheckSession(data models.UserSession) (userUniqueID string, err error) 
+	RegisterUser(ctx context.Context, request models.RegisterRequest) (models.User, error)
+	LoginUser(ctx context.Context, request models.LoginRequest) (models.UserSession, error)
+	CheckSession(ctx context.Context, data models.UserSession) (userUniqueID string, err error)
 }

@@ -12,7 +12,9 @@ import (
 	"github.com/takumifahri/RESTful-API-GO/internal/database"
 	"github.com/takumifahri/RESTful-API-GO/internal/delivery/rest"
 	routers "github.com/takumifahri/RESTful-API-GO/internal/delivery/routes"
+	"github.com/takumifahri/RESTful-API-GO/internal/logger"
 	"github.com/takumifahri/RESTful-API-GO/internal/middlewares"
+	"github.com/takumifahri/RESTful-API-GO/internal/tracing"
 
 	strRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/catalog"
 	orderRepo "github.com/takumifahri/RESTful-API-GO/internal/repository/order"
@@ -112,6 +114,8 @@ func main() {
 
     // 5. Jika tidak ada flag, jalankan server (perilaku default)
     fmt.Println("No command flags detected, starting server...")
+    logger.Init()
+    tracing.Init(getEnvWithDefault("JAEGER_URL", "http://localhost:14268/api/traces"))
     e := echo.New()
     secret := "AES256Key-32Characters1234567890" // Ganti dengan secret key yang sesuai
     signKey, err := rsa.GenerateKey(rand.Reader, 4096)

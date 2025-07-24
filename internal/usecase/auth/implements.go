@@ -5,6 +5,7 @@ import (
 	// "fmt"
 
 	// "github.com/google/uuid"
+	"context"
 	"errors"
 	"fmt"
 
@@ -15,6 +16,7 @@ import (
 	// "github.com/takumifahri/RESTful-API-GO/internal/repository/catalog"
 	// "github.com/takumifahri/RESTful-API-GO/internal/repository/order"
 	"github.com/takumifahri/RESTful-API-GO/internal/repository/users/auth"
+	"github.com/takumifahri/RESTful-API-GO/internal/tracing"
 )
 
 type authUsecase struct {
@@ -27,9 +29,11 @@ func GetUsecase( userRepo auth.Repository) Usecase {
 	}
 }
 
-func (au *authUsecase) RegisterUser(request models.RegisterRequest) (models.User, error) {
+func (au *authUsecase) RegisterUser(ctx context.Context, request models.RegisterRequest) (models.User, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "RegisterUser")
+	defer span.End()
 	// cek apakah user sudah register atau belum
-	RegisteredUser, err := au.userRepo.CheckRegistered(request.Name)
+	RegisteredUser, err := au.userRepo.CheckRegistered(ctx, request.Name)
 	//debug jika ada error
 	if err != nil {
 		fmt.Println("Error checking registered user:", err)
@@ -42,19 +46,19 @@ func (au *authUsecase) RegisterUser(request models.RegisterRequest) (models.User
 
 	// Jika belum terdaftar, buat user baru
 	// kita buat hash nya dlu untuk password
-	hashUser, err := au.userRepo.GenerateUserHash(request.Password)
+	hashUser, err := au.userRepo.GenerateUserHash(ctx, request.Password)
 	if err != nil {
 		fmt.Println("Error generating user hash:", err)
 		return models.User{}, err
 	}
 
-	userData, err := au.userRepo.RegisterUser(models.User{
+	userData, err := au.userRepo.RegisterUser(ctx, models.User{
 		UniqueID: "USR-" + uuid.New().String(),
 		Email:    request.Email,
 		Name:     request.Name,
 		Hash:     hashUser,
 		Phone:    request.Phone,
-		Address: request.Address,
+		Address:  request.Address,
 	})
 	if err != nil {
 		fmt.Println("Error registering user:", err)
@@ -63,11 +67,14 @@ func (au *authUsecase) RegisterUser(request models.RegisterRequest) (models.User
 	fmt.Println("User registered successfully:", userData)
 	return userData, nil
 }
-func (au *authUsecase) LoginUser(request models.LoginRequest) (models.UserSession, error) {
+func (au *authUsecase) LoginUser(ctx context.Context, request models.LoginRequest) (models.UserSession, error) {
+    ctx, span := tracing.CreateSpanWrapper(ctx, "LoginUser")
+    defer span.End()
+
     fmt.Println("🔍 DEBUG: Starting login for email:", request.Email)
     
     fmt.Println("🔍 DEBUG: Getting user data...")
-    userData, err := au.userRepo.GetMe(request.Email)
+    userData, err := au.userRepo.GetMe(ctx, request.Email)
     if err != nil {
         fmt.Println("❌ ERROR getting user data:", err)
         return models.UserSession{}, err
@@ -75,7 +82,7 @@ func (au *authUsecase) LoginUser(request models.LoginRequest) (models.UserSessio
     fmt.Println("✅ DEBUG: User data retrieved:", userData.Name)
 
     fmt.Println("🔍 DEBUG: Verifying login...")
-    verified, err := au.userRepo.VerifyUserLogin(request.Email, request.Password, userData)
+    verified, err := au.userRepo.VerifyUserLogin(ctx, request.Email, request.Password, userData)
     if err != nil {
         fmt.Println("❌ ERROR verifying user login:", err)
         return models.UserSession{}, err
@@ -88,7 +95,7 @@ func (au *authUsecase) LoginUser(request models.LoginRequest) (models.UserSessio
     }
 
     fmt.Println("🔍 DEBUG: Creating user session...")
-    userSession, err := au.userRepo.CreateUserSession(userData.UniqueID)
+    userSession, err := au.userRepo.CreateUserSession(ctx, userData.UniqueID)
     if err != nil {
         fmt.Println("❌ ERROR creating user session:", err)
         return models.UserSession{}, err
@@ -99,8 +106,10 @@ func (au *authUsecase) LoginUser(request models.LoginRequest) (models.UserSessio
 }
 
 
-func (au *authUsecase) CheckSession(data models.UserSession) (userUniqueID string, err error) {
-  	userUniqueID, err = au.userRepo.CheckSession(data)
+func (au *authUsecase) CheckSession(ctx context.Context, data models.UserSession) (userUniqueID string, err error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "CheckSession")
+	defer span.End()
+  	userUniqueID, err = au.userRepo.CheckSession(ctx, data)
 	// Debug
 	if err != nil {
 		fmt.Println("❌ ERROR checking session:", err)

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/takumifahri/RESTful-API-GO/internal/models/constant"
 	"github.com/takumifahri/RESTful-API-GO/internal/repository/catalog"
 	"github.com/takumifahri/RESTful-API-GO/internal/repository/order"
+	"github.com/takumifahri/RESTful-API-GO/internal/tracing"
 )
 
 type storeUsecase struct {
@@ -23,11 +25,14 @@ func GetUsecase(menuyRepo catalog.Repository, orderRepo order.Repository) Usecas
 	}
 }
 
-func (s *storeUsecase) GetAllCatalogList(tipe string) ([]models.ProductClothes, error) {
-	return s.menuRepo.GetAllCatalogList(tipe)
+func (s *storeUsecase) GetAllCatalogList(ctx context.Context, tipe string) ([]models.ProductClothes, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "GetAllCatalogList")
+	defer span.End()
+	return s.menuRepo.GetAllCatalogList(ctx, tipe)
 }
-func (s *storeUsecase) GetCatalogByID(UNIQUEID string) (*models.ProductClothes, error) {
-	catalogData, err := s.menuRepo.GetCatalogByID(UNIQUEID)
+
+func (s *storeUsecase) GetCatalogByID(ctx context.Context, UNIQUEID string) (*models.ProductClothes, error) {
+	catalogData, err := s.menuRepo.GetCatalogByID(ctx, UNIQUEID)
 	if err != nil {
 		return nil, err
 	}
@@ -37,17 +42,19 @@ func (s *storeUsecase) GetCatalogByID(UNIQUEID string) (*models.ProductClothes, 
 	return catalogData, nil
 }
 
-func (s *storeUsecase) AddCatalog(catalog models.ProductClothes) (models.ProductClothes, error) {
+func (s *storeUsecase) AddCatalog(ctx context.Context, catalog models.ProductClothes) (models.ProductClothes, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "AddCatalog")
+	defer span.End()
     // 1. Generate UUID (ID akan di-handle oleh database)
     catalog.UNIQUEID = fmt.Sprintf("PRD-%s", uuid.New().String())
     
     // 2. Save ke repository
-    if err := s.menuRepo.CreateCatalog(catalog); err != nil {
+    if err := s.menuRepo.CreateCatalog(ctx,catalog); err != nil {
         return models.ProductClothes{}, err
     }
     
     // 3. PENTING: Query kembali data yang baru saja disimpan untuk mendapatkan ID yang benar
-    savedCatalog, err := s.menuRepo.GetCatalogByID(catalog.UNIQUEID)
+    savedCatalog, err := s.menuRepo.GetCatalogByID(ctx, catalog.UNIQUEID)
     if err != nil {
         return models.ProductClothes{}, err
     }
@@ -55,9 +62,12 @@ func (s *storeUsecase) AddCatalog(catalog models.ProductClothes) (models.Product
     return *savedCatalog, nil
 }
 
-func (s *storeUsecase) UpdateCatalog(catalog models.ProductClothes) (models.ProductClothes, error) {
+func (s *storeUsecase) UpdateCatalog(ctx context.Context, catalog models.ProductClothes) (models.ProductClothes, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "UpdateCatalog")
+	defer span.End()
+
 	// 1. Cek apakah catalog exist
-	existingCatalog, err := s.menuRepo.GetCatalogByID(catalog.UNIQUEID)
+	existingCatalog, err := s.menuRepo.GetCatalogByID(ctx, catalog.UNIQUEID)
 	if err != nil {
 		return models.ProductClothes{}, err
 	}
@@ -74,12 +84,12 @@ func (s *storeUsecase) UpdateCatalog(catalog models.ProductClothes) (models.Prod
 	updateData["type_clothes"] = catalog.TypeClothes
 
 	// 3. Update di repository
-	if err := s.menuRepo.UpdateCatalog(catalog.UNIQUEID, updateData); err != nil {
+	if err := s.menuRepo.UpdateCatalog(ctx, catalog.UNIQUEID, updateData); err != nil {
 		return models.ProductClothes{}, err
 	}
 
 	// 4. Return updated data
-	updatedCatalog, err := s.menuRepo.GetCatalogByID(catalog.UNIQUEID)
+	updatedCatalog, err := s.menuRepo.GetCatalogByID(ctx, catalog.UNIQUEID)
 	if err != nil {
 		return models.ProductClothes{}, err
 	}
@@ -87,7 +97,10 @@ func (s *storeUsecase) UpdateCatalog(catalog models.ProductClothes) (models.Prod
 	return *updatedCatalog, nil
 }
 
-func (s *storeUsecase) Order(request models.OrderMenuRequest) (models.Order, error) {
+func (s *storeUsecase) Order(ctx context.Context, request models.OrderMenuRequest) (models.Order, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "Order")
+	defer span.End()
+
     productOrderData := make([]models.ProductOrder, len(request.OrderProduct))
 
     // Generate Order UNIQUEID sekali di awal
@@ -96,7 +109,7 @@ func (s *storeUsecase) Order(request models.OrderMenuRequest) (models.Order, err
     //  Kita loop 
     for i, orderProduct := range request.OrderProduct {
         // Gunakan GetCatalogByID untuk UNIQUEID
-        menuData, err := s.menuRepo.GetCatalogByID(orderProduct.ProductID)
+        menuData, err := s.menuRepo.GetCatalogByID(ctx,orderProduct.ProductID)
         if err != nil {
             return models.Order{}, err
         }
@@ -127,14 +140,16 @@ func (s *storeUsecase) Order(request models.OrderMenuRequest) (models.Order, err
 		return models.Order{}, errors.New("reference ID is required")
 	} 
 
-    createData, err := s.orderRepo.CreateOrder(orderData)
+    createData, err := s.orderRepo.CreateOrder(ctx, orderData)
     if err != nil {
         return models.Order{}, err
     }
     return createData, nil 
 }
-func (s *storeUsecase) GetOrderInfo(request models.GetOrderInfoRequest) (models.Order, error) {
-	orderData, err := s.orderRepo.GetInfoOrder(request.OrderID)
+func (s *storeUsecase) GetOrderInfo(ctx context.Context, request models.GetOrderInfoRequest) (models.Order, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "GetOrderInfo")
+	defer span.End()
+	orderData, err := s.orderRepo.GetInfoOrder(ctx, request.OrderID)
 	if err != nil {
 		return orderData, err
 	}
@@ -144,9 +159,11 @@ func (s *storeUsecase) GetOrderInfo(request models.GetOrderInfoRequest) (models.
 	return orderData, nil
 }
 
-func (s *storeUsecase) AdminGetAllOrder() ([]models.Order, error) {
+func (s *storeUsecase) AdminGetAllOrder(ctx context.Context) ([]models.Order, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "AdminGetAllOrder")
+	defer span.End()
     // Tidak perlu parameter, langsung ambil semua
-    orderData, err := s.orderRepo.AdminGetAllOrder()
+    orderData, err := s.orderRepo.AdminGetAllOrder(ctx)
     if err != nil {
         return nil, err
     }

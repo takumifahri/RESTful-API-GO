@@ -8,18 +8,20 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
 	"github.com/takumifahri/RESTful-API-GO/internal/utils"
+    "github.com/takumifahri/RESTful-API-GO/internal/tracing"
 	// "github.com/takumifahri/RESTful-API-GO/internal/models"
 )
 
 func (h *Handler) GetAllCatalogList(c echo.Context) error {
-
+    ctx, span := tracing.CreateSpanWrapper(c.Request().Context(), "GetAllCatalogList")
+    defer span.End()
 	// Params 
 	clothesType := c.QueryParam("TypeClothes")
-	catalogData, err := h.storeUsecase.GetAllCatalogList(clothesType)
+	catalogData, err := h.storeUsecase.GetAllCatalogList(ctx, clothesType)
 	if err != nil {
 		fmt.Printf("Error fetching catalog %s\n", err.Error())
 
-		return  c.JSON(http.StatusInternalServerError, map[string]string{
+		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"message": "Failed to fetch catalog",
 			"error":   err.Error(),	
 		})
@@ -40,6 +42,8 @@ func (h *Handler) GetAllCatalogList(c echo.Context) error {
 }
 
 func (h *Handler) GetCatalogByID(c echo.Context) error {
+    ctx, span := tracing.CreateSpanWrapper(c.Request().Context(), "GetCatalogByID")
+    defer span.End()
     uniqueID := c.Param("unique_id")
     if uniqueID == "" {
         return c.JSON(http.StatusBadRequest, map[string]string{
@@ -47,7 +51,7 @@ func (h *Handler) GetCatalogByID(c echo.Context) error {
         })
     }
 
-    catalogData, err := h.storeUsecase.GetCatalogByID(uniqueID)
+    catalogData, err := h.storeUsecase.GetCatalogByID(ctx, uniqueID)
 
     if err != nil {
         fmt.Printf("Error fetching catalog by unique ID: %s\n", err.Error())
@@ -70,6 +74,9 @@ func (h *Handler) GetCatalogByID(c echo.Context) error {
 }
 
 func (h *Handler) AddCatalog(c echo.Context) error {
+    ctx, span := tracing.CreateSpanWrapper(c.Request().Context(), "AddCatalog")
+    defer span.End()
+    
 	var request models.ProductClothes
 	err := json.NewDecoder(c.Request().Body).Decode(&request)
 	if err != nil {
@@ -86,7 +93,7 @@ func (h *Handler) AddCatalog(c echo.Context) error {
             "error":   err.Error(),
         })
     }
-	catalogData, err := h.storeUsecase.AddCatalog(request)
+	catalogData, err := h.storeUsecase.AddCatalog(ctx, request)
 	if err != nil {
 		fmt.Printf("Error adding catalog: %s\n", err.Error())
 		return c.JSON(http.StatusInternalServerError, map[string]string{
@@ -101,6 +108,9 @@ func (h *Handler) AddCatalog(c echo.Context) error {
 	
 }
 func (h *Handler) UpdateCatalog(c echo.Context) error {
+    ctx, span := tracing.CreateSpanWrapper(c.Request().Context(), "UpdateCatalog")
+    defer span.End()
+
     uniqueID := c.Param("unique_id")
     if uniqueID == "" {
         return c.JSON(http.StatusBadRequest, map[string]string{
@@ -127,7 +137,7 @@ func (h *Handler) UpdateCatalog(c echo.Context) error {
     }
 
     // Get existing catalog data
-    existingCatalog, err := h.storeUsecase.GetCatalogByID(uniqueID)
+    existingCatalog, err := h.storeUsecase.GetCatalogByID(ctx, uniqueID)
     if err != nil {
         fmt.Printf("Error fetching existing catalog: %s\n", err.Error())
         return c.JSON(http.StatusInternalServerError, map[string]string{
@@ -162,7 +172,7 @@ func (h *Handler) UpdateCatalog(c echo.Context) error {
         updateRequest.TypeClothes = models.Tipe(*request.TypeClothes)
     }
 
-    catalogData, err := h.storeUsecase.UpdateCatalog(updateRequest)
+    catalogData, err := h.storeUsecase.UpdateCatalog(ctx, updateRequest)
     if err != nil {
         fmt.Printf("Error updating catalog: %s\n", err.Error())
         return c.JSON(http.StatusInternalServerError, map[string]string{

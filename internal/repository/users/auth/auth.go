@@ -1,12 +1,15 @@
 package auth
 
 import (
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rsa"
-	"time"
 	"fmt"
+	"time"
+
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
+	"github.com/takumifahri/RESTful-API-GO/internal/tracing"
 	"gorm.io/gorm"
 )
 
@@ -53,17 +56,22 @@ func GetRepository(
 	}, nil
 }
 
-func (au *authRepo) RegisterUser(userData models.User) (models.User, error) {
-	if err := au.db.Create(&userData).Error; err != nil {
+func (au *authRepo) RegisterUser(ctx context.Context, userData models.User) (models.User, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "RegisterUser")
+	defer span.End()
+
+	if err := au.db.WithContext(ctx).Create(&userData).Error; err != nil {
 		return models.User{}, err
 	}
 	return userData, nil
 }
 
-func (au *authRepo) CheckRegistered(Email string) (bool, error) {
-	// ktia ambil data kosongan dari user yakni
+func (au *authRepo) CheckRegistered(ctx context.Context, Email string) (bool, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "CheckRegistered")
+	defer span.End()
+	// kita ambil data kosongan dari user yakni
 	var userData models.User
-	if err := au.db.Where("email = ?", Email).First(&userData).Error; err != nil {
+	if err := au.db.WithContext(ctx).Where("email = ?", Email).First(&userData).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return false, nil // User tidak ditemukan
 		}
@@ -98,19 +106,24 @@ func (au *authRepo) CheckRegistered(Email string) (bool, error) {
 // }
 
 
-func (au *authRepo) GetMe(email string) (models.User, error) {
-    var userData models.User
-    
-    if err := au.db.Where("email = ?", email).First(&userData).Error; err != nil {
-        fmt.Println("❌ REPO ERROR: User not found:", err)
-        return userData, err
+func (au *authRepo) GetMe(ctx context.Context, email string) (models.User, error) {
+	ctx, span := tracing.CreateSpanWrapper(ctx, "GetMe")
+	defer span.End()
+	var userData models.User
+
+	if err := au.db.WithContext(ctx).Where("email = ?", email).First(&userData).Error; err != nil {
+		fmt.Println("❌ REPO ERROR: User not found:", err)
+		return userData, err
     }
     
     return userData, nil
 }
 
-func (au *authRepo) VerifyUserLogin(email, password string, userData models.User) (bool, error) {
-    verified, err := au.comparePassword(password, userData.Hash)
+func (au *authRepo) VerifyUserLogin(ctx context.Context, email, password string, userData models.User) (bool, error) {
+    ctx, span := tracing.CreateSpanWrapper(ctx, "VerifyUserLogin")
+    defer span.End()
+
+    verified, err := au.comparePassword(ctx, password, userData.Hash)
     if err != nil {
         fmt.Println("❌ REPO ERROR: Compare password failed:", err)
         return false, err

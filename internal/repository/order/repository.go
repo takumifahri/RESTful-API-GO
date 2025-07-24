@@ -1,12 +1,15 @@
 package order
 
 
-import "github.com/takumifahri/RESTful-API-GO/internal/models"
+import (
+	"github.com/takumifahri/RESTful-API-GO/internal/models"
+	"context"
+)
 
 type Repository interface {
-	CreateOrder(order models.Order) (models.Order, error)
-	GetAllOrder(order models.Order) (models.Order, error)
-	GetInfoOrder(orderID string) (models.Order, error)
-  	AdminGetAllOrder() ([]models.Order, error) // ✅ Tidak perlu parameter
+	CreateOrder(ctx context.Context, order models.Order) (models.Order, error)
+	GetAllOrder(ctx context.Context, order models.Order) (models.Order, error)
+	GetInfoOrder(ctx context.Context, orderID string) (models.Order, error)
+  	AdminGetAllOrder(ctx context.Context) ([]models.Order, error) // ✅ Tidak perlu parameter
 }
 

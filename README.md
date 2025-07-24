@@ -598,3 +598,133 @@ func WrongHashPassword(password string) []byte {
 
 **Kesimpulan:** Selalu gunakan `argon2.IDKey` untuk password hashing. `argon2.Key` hanya untuk key derivation dalam konteks yang sangat spesifik dan aman.
 
+---
+
+## Logging di Go: Menggunakan Logrus
+
+### Apa itu Logrus?
+
+[Logrus](https://github.com/sirupsen/logrus) adalah library logging populer di Go yang menyediakan fitur logging yang lebih kaya dibandingkan `log` atau `fmt`. Logrus mendukung level log (info, warn, error, debug), format output (JSON, text), hooks, dan struktur log yang lebih baik.
+
+### Kapan Harus Menggunakan Logrus?
+
+Gunakan Logrus (atau library logging lain seperti Zap, Zerolog) ketika:
+- Aplikasi sudah mulai kompleks (bukan sekadar CLI sederhana)
+- Membutuhkan log terstruktur (misal: JSON untuk log aggregator/monitoring)
+- Ingin membedakan level log (debug, info, warn, error, fatal)
+- Perlu menulis log ke file, syslog, atau layanan eksternal
+- Ingin menambah metadata (field) pada log (misal: user_id, request_id)
+
+### Kelebihan Logrus dibanding Debugging dengan `fmt`
+
+| Fitur                | `fmt.Println` / `log.Println` | Logrus (dan sejenisnya)      |
+|----------------------|-------------------------------|------------------------------|
+| Level log            | ❌ Tidak ada                  | ✅ Ada (Debug, Info, Warn, Error, Fatal, Panic) |
+| Format output        | ❌ Plain text                 | ✅ Text/JSON/custom           |
+| Field/metadata       | ❌ Tidak ada                  | ✅ Bisa tambah field (structured logging) |
+| Output ke banyak tujuan | ❌ Sulit                   | ✅ Mudah (file, syslog, hook) |
+| Filtering log        | ❌ Tidak bisa                 | ✅ Bisa filter per level      |
+| Integrasi monitoring | ❌ Manual                     | ✅ Mudah diintegrasi          |
+| Stack trace/error    | ❌ Manual                     | ✅ Built-in untuk error/fatal |
+
+### Contoh Penggunaan Logrus
+
+```go
+import (
+    log "github.com/sirupsen/logrus"
+)
+
+func main() {
+    // Set format ke JSON (opsional)
+    log.SetFormatter(&log.JSONFormatter{})
+
+    // Set level log (misal: hanya tampilkan info ke atas)
+    log.SetLevel(log.InfoLevel)
+
+    log.Info("Server started")
+    log.WithFields(log.Fields{
+        "user_id": "USR-123",
+        "action": "login",
+    }).Warn("Suspicious login detected")
+
+    log.Error("Database connection failed")
+}
+```
+
+### Best Practice
+
+- Gunakan log level sesuai kebutuhan (`Debug` untuk development, `Info` untuk event penting, `Warn` untuk potensi masalah, `Error` untuk error)
+- Tambahkan field/metadata untuk memudahkan tracing (misal: request_id, user_id)
+- Gunakan format JSON untuk aplikasi production (mudah di-parse oleh log aggregator)
+- Jangan gunakan `fmt.Println` untuk logging di aplikasi production
+
+---
+
+**Kesimpulan:**  
+Logrus (atau library logging lain) sangat direkomendasikan untuk aplikasi Go production karena memberikan fleksibilitas, kemudahan debugging, dan integrasi dengan sistem monitoring/log aggregator. Gunakan `fmt.Println` hanya untuk debugging sangat sederhana atau script sekali pakai.
+
+
+## Menangani Panic dengan Middleware Log + Recover
+
+Pada aplikasi Go berbasis web (seperti Echo), **panic** yang tidak tertangani dapat menyebabkan server crash dan menghentikan semua request. Untuk menjaga **konsistensi error** dan memastikan server tetap berjalan, gunakan middleware **Recover** yang juga melakukan logging error.
+
+### Apa itu Panic?
+
+- Panic terjadi saat aplikasi menemukan error fatal yang tidak bisa ditangani (misal: index out of range, nil pointer).
+- Jika panic tidak di-recover, aplikasi akan crash.
+
+### Solusi: Middleware Recover
+
+Framework seperti Echo menyediakan middleware `Recover()` yang secara otomatis menangkap panic, mencegah crash, dan mengembalikan response error yang konsisten ke client.
+
+#### Contoh Penggunaan di Echo
+
+```go
+import (
+    "github.com/labstack/echo/v4"
+    "github.com/labstack/echo/v4/middleware"
+    log "github.com/sirupsen/logrus"
+)
+
+func main() {
+    e := echo.New()
+
+    // Middleware Recover + Logging
+    e.Use(middleware.Recover())
+    e.Use(middleware.Logger())
+
+    // Atau custom recover dengan logrus
+    e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+        return func(c echo.Context) error {
+            defer func() {
+                if r := recover(); r != nil {
+                    log.WithField("panic", r).Error("Recovered from panic")
+                    c.JSON(500, map[string]string{"error": "internal server error"})
+                }
+            }()
+            return next(c)
+        }
+    })
+
+    // ... routes ...
+    e.Logger.Fatal(e.Start(":8081"))
+}
+```
+
+### Manfaat
+
+- **Server tidak crash** meski terjadi panic.
+- **Error tetap ter-log** (misal dengan Logrus) untuk keperluan debugging.
+- **Response error konsisten** ke client (tidak bocor stack trace atau info sensitif).
+- **Stabilitas aplikasi** lebih terjaga.
+
+### Best Practice
+
+- Selalu aktifkan middleware `Recover` di aplikasi production.
+- Gabungkan dengan logging structured (Logrus/Zap) agar root cause mudah ditelusuri.
+- Jangan gunakan panic untuk flow control biasa, hanya untuk error fatal.
+
+---
+
+**Kesimpulan:**  
+Gunakan middleware log + recover untuk menangani panic secara terpusat, menjaga aplikasi tetap berjalan, dan memastikan error tercatat dengan baik.
