@@ -19,7 +19,7 @@ func GetRepository(db *gorm.DB) Repository {
 }
 
 func (m *menuRepo) GetAllCatalogList(ctx context.Context, tipe string) ([]models.ProductClothes, error) {
-    ctx, span := tracing.CreateSpanWrapper(ctx, "GetAllCatalogList")
+    _, span := tracing.CreateSpanWrapper(ctx, "GetAllCatalogList")
     defer span.End()
     var catalogData []models.ProductClothes
 

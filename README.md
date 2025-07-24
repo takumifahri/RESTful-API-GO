@@ -728,3 +728,71 @@ func main() {
 
 **Kesimpulan:**  
 Gunakan middleware log + recover untuk menangani panic secara terpusat, menjaga aplikasi tetap berjalan, dan memastikan error tercatat dengan baik.
+
+## Cara Generate Mock Otomatis dengan mockgen
+
+Selain membuat mock secara manual, Anda juga bisa menggunakan tool [mockgen](https://github.com/golang/mock) dari package `golang/mock` untuk menghasilkan kode mock secara otomatis dari interface Go.
+
+### 1. Install mockgen
+
+```sh
+go install github.com/golang/mock/mockgen@latest
+```
+
+Pastikan `$GOPATH/bin` sudah ada di PATH Anda.
+
+### 2. Generate Mock
+
+Misal Anda punya interface di file `internal/repository/catalog/repository.go`:
+
+```go
+type CatalogRepository interface {
+    GetAll() ([]ProductClothes, error)
+    GetByID(id string) (*ProductClothes, error)
+    Create(product *ProductClothes) error
+}
+```
+
+Jalankan perintah berikut di terminal untuk generate mock-nya:
+
+```sh
+mockgen -source=internal/repository/catalog/repository.go -destination=internal/repository/catalog/mock_repository.go -package=catalog
+```
+
+- `-source`: file interface asli
+- `-destination`: file output mock
+- `-package`: nama package untuk file mock
+
+### 3. Contoh Penggunaan di Test
+
+Import mock yang sudah di-generate, lalu gunakan di unit test Anda:
+
+```go
+import (
+    "testing"
+    "github.com/golang/mock/gomock"
+    "yourmodule/internal/repository/catalog"
+)
+
+func TestGetAllCatalog(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := catalog.NewMockCatalogRepository(ctrl)
+    mockRepo.EXPECT().GetAll().Return([]catalog.ProductClothes{
+        {UniqueID: "PRD-1", NamaPakaian: "Kaos"},
+    }, nil)
+
+    usecase := NewCatalogUsecase(mockRepo)
+    result, err := usecase.GetAll()
+    require.NoError(t, err)
+    require.Len(t, result, 1)
+}
+```
+
+### Tips
+
+- Gunakan mockgen untuk interface yang sering berubah atau kompleks.
+- mockgen bisa diintegrasikan ke Makefile atau script build/test Anda.
+
+---
