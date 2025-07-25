@@ -796,3 +796,153 @@ func TestGetAllCatalog(t *testing.T) {
 - mockgen bisa diintegrasikan ke Makefile atau script build/test Anda.
 
 ---
+
+# Unit Test dan Mocking untuk RESTful API Go Catalog
+
+File ini berisi contoh dan best practice untuk penulisan unit test di proyek Go Catalog, termasuk penggunaan **gomock** untuk mocking dependency.
+
+## Struktur Test
+
+- Semua unit test sebaiknya ditempatkan di file dengan suffix `_test.go` (misal: `catalog_handler_test.go`, `order_usecase_test.go`).
+- Untuk interface, gunakan **gomock** untuk generate mock otomatis.
+- Test file ini hanya contoh, implementasi sesuaikan dengan struktur dan interface di proyek Anda.
+
+---
+
+## 1. Install Dependency Test
+
+Install package testing dan mock:
+```sh
+go get github.com/golang/mock/gomock
+go get github.com/stretchr/testify
+```
+
+## 2. Generate Mock Interface
+
+Gunakan mockgen untuk membuat mock dari interface repository atau usecase:
+```sh
+mockgen -source=internal/repository/catalog/repository.go -destination=internal/repository/catalog/mock_repository.go -package=catalog
+```
+
+## 3. Contoh Unit Test Handler
+
+```go
+import (
+    "net/http"
+    "net/http/httptest"
+    "testing"
+    "github.com/labstack/echo/v4"
+    "github.com/golang/mock/gomock"
+    "github.com/stretchr/testify/require"
+    "yourmodule/internal/repository/catalog"
+)
+
+func TestGetAllClothesHandler(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := catalog.NewMockCatalogRepository(ctrl)
+    mockRepo.EXPECT().GetAll().Return([]catalog.ProductClothes{
+        {UniqueID: "PRD-1", NamaPakaian: "Kaos"},
+    }, nil)
+
+    e := echo.New()
+    req := httptest.NewRequest(http.MethodGet, "/clothes", nil)
+    rec := httptest.NewRecorder()
+    c := e.NewContext(req, rec)
+
+    handler := NewCatalogHandler(mockRepo)
+    err := handler.GetAllClothes(c)
+
+    require.NoError(t, err)
+    require.Equal(t, http.StatusOK, rec.Code)
+    // Tambahkan assertion sesuai response
+}
+```
+
+## 4. Best Practice Testing
+
+- Mock dependency (repository, usecase) agar test terisolasi.
+- Gunakan `require` atau `assert` dari testify untuk assertion.
+- Test semua skenario: sukses, error, validasi gagal.
+- Jalankan test dengan `go test ./...`.
+
+---
+
+**Kesimpulan:**  
+Unit test dengan mocking memastikan logika aplikasi teruji tanpa tergantung database atau dependency eksternal. Gunakan mockgen dan testify untuk test yang robust dan mudah dipelihara.
+
+## Behavior Driven Development (BDD) di Go
+
+### Apa itu BDD?
+
+**BDD (Behavior Driven Development)** adalah pendekatan pengembangan perangkat lunak yang berfokus pada perilaku aplikasi dari sudut pandang pengguna. BDD menulis spesifikasi dalam bentuk skenario yang mudah dipahami, biasanya menggunakan format Given-When-Then, sehingga komunikasi antara developer, QA, dan stakeholder menjadi lebih jelas.
+
+### Seperti Apa BDD?
+
+- Spesifikasi ditulis sebagai **skenario**:  
+    - **Given** (dengan kondisi awal tertentu)
+    - **When** (ketika aksi dilakukan)
+    - **Then** (maka hasil yang diharapkan)
+- Contoh skenario BDD:
+    ```
+    Given user belum terdaftar
+    When user melakukan registrasi dengan data valid
+    Then user berhasil terdaftar dan mendapatkan unique ID
+    ```
+
+### Implementasi BDD di Go
+
+Di Go, BDD dapat diimplementasikan menggunakan framework seperti [Ginkgo](https://github.com/onsi/ginkgo) dan [Gomega](https://github.com/onsi/gomega).
+
+#### 1. Install Ginkgo & Gomega
+
+```sh
+go get github.com/onsi/ginkgo/v2/ginkgo
+go get github.com/onsi/gomega/...
+```
+
+#### 2. Contoh Test BDD dengan Ginkgo
+
+```go
+package catalog_test
+
+import (
+        . "github.com/onsi/ginkgo/v2"
+        . "github.com/onsi/gomega"
+)
+
+var _ = Describe("Catalog API", func() {
+        Context("Ketika user mengambil semua produk", func() {
+                It("harus mengembalikan list produk", func() {
+                        products := GetAllProducts()
+                        Expect(products).NotTo(BeEmpty())
+                })
+        })
+
+        Context("Ketika user menambah produk baru", func() {
+                It("harus berhasil menambah produk", func() {
+                        err := AddProduct(Product{Nama: "Kaos", Price: 100000})
+                        Expect(err).To(BeNil())
+                })
+        })
+})
+```
+
+#### 3. Jalankan Test BDD
+
+```sh
+ginkgo -v
+```
+
+### Kegunaan BDD
+
+- **Meningkatkan komunikasi** antara tim teknis dan non-teknis
+- **Dokumentasi hidup**: test adalah spesifikasi perilaku aplikasi
+- **Membantu validasi fitur**: setiap fitur diuji dari sisi perilaku
+- **Memudahkan refactoring**: test BDD memastikan perilaku tetap konsisten
+
+---
+
+**Kesimpulan:**  
+BDD di Go (dengan Ginkgo/Gomega) membantu menulis test yang mudah dipahami, menjaga aplikasi tetap sesuai dengan kebutuhan bisnis, dan meningkatkan kualitas serta kolaborasi tim.
