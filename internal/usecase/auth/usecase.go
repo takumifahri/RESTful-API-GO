@@ -5,6 +5,7 @@ import (
 	"context"
 )
 
+
 type Usecase interface {
 	RegisterUser(ctx context.Context, request models.RegisterRequest) (models.User, error)
 	LoginUser(ctx context.Context, request models.LoginRequest) (models.UserSession, error)

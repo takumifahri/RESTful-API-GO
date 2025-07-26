@@ -6,6 +6,7 @@ import (
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
 )
 
+
 type Usecase interface {
 	GetAllCatalogList(ctx context.Context, tipe string) ([]models.ProductClothes, error)
 	GetCatalogByID(ctx context.Context, UNIQUEID string) (*models.ProductClothes, error)

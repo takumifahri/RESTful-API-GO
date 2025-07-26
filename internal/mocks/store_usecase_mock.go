@@ -12,31 +12,31 @@ import (
 	models "github.com/takumifahri/RESTful-API-GO/internal/models"
 )
 
-// MockUsecase is a mock of Usecase interface.
-type MockUsecase struct {
+// MockStoreUsecase is a mock of Usecase interface.
+type MockStoreUsecase struct {
 	ctrl     *gomock.Controller
-	recorder *MockUsecaseMockRecorder
+	recorder *MockStoreUsecaseMockRecorder
 }
 
-// MockUsecaseMockRecorder is the mock recorder for MockUsecase.
-type MockUsecaseMockRecorder struct {
-	mock *MockUsecase
+// MockStoreUsecaseMockRecorder is the mock recorder for MockStoreUsecase.
+type MockStoreUsecaseMockRecorder struct {
+	mock *MockStoreUsecase
 }
 
-// NewMockUsecase creates a new mock instance.
-func NewMockUsecase(ctrl *gomock.Controller) *MockUsecase {
-	mock := &MockUsecase{ctrl: ctrl}
-	mock.recorder = &MockUsecaseMockRecorder{mock}
+// NewMockStoreUsecase creates a new mock instance.
+func NewMockStoreUsecase(ctrl *gomock.Controller) *MockStoreUsecase {
+	mock := &MockStoreUsecase{ctrl: ctrl}
+	mock.recorder = &MockStoreUsecaseMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockUsecase) EXPECT() *MockUsecaseMockRecorder {
+func (m *MockStoreUsecase) EXPECT() *MockStoreUsecaseMockRecorder {
 	return m.recorder
 }
 
 // AddCatalog mocks base method.
-func (m *MockUsecase) AddCatalog(ctx context.Context, catalog models.ProductClothes) (models.ProductClothes, error) {
+func (m *MockStoreUsecase) AddCatalog(ctx context.Context, catalog models.ProductClothes) (models.ProductClothes, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddCatalog", ctx, catalog)
 	ret0, _ := ret[0].(models.ProductClothes)
@@ -45,13 +45,13 @@ func (m *MockUsecase) AddCatalog(ctx context.Context, catalog models.ProductClot
 }
 
 // AddCatalog indicates an expected call of AddCatalog.
-func (mr *MockUsecaseMockRecorder) AddCatalog(ctx, catalog interface{}) *gomock.Call {
+func (mr *MockStoreUsecaseMockRecorder) AddCatalog(ctx, catalog interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddCatalog", reflect.TypeOf((*MockUsecase)(nil).AddCatalog), ctx, catalog)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddCatalog", reflect.TypeOf((*MockStoreUsecase)(nil).AddCatalog), ctx, catalog)
 }
 
 // AdminGetAllOrder mocks base method.
-func (m *MockUsecase) AdminGetAllOrder(ctx context.Context) ([]models.Order, error) {
+func (m *MockStoreUsecase) AdminGetAllOrder(ctx context.Context) ([]models.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminGetAllOrder", ctx)
 	ret0, _ := ret[0].([]models.Order)
@@ -60,13 +60,13 @@ func (m *MockUsecase) AdminGetAllOrder(ctx context.Context) ([]models.Order, err
 }
 
 // AdminGetAllOrder indicates an expected call of AdminGetAllOrder.
-func (mr *MockUsecaseMockRecorder) AdminGetAllOrder(ctx interface{}) *gomock.Call {
+func (mr *MockStoreUsecaseMockRecorder) AdminGetAllOrder(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminGetAllOrder", reflect.TypeOf((*MockUsecase)(nil).AdminGetAllOrder), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminGetAllOrder", reflect.TypeOf((*MockStoreUsecase)(nil).AdminGetAllOrder), ctx)
 }
 
 // GetAllCatalogList mocks base method.
-func (m *MockUsecase) GetAllCatalogList(ctx context.Context, tipe string) ([]models.ProductClothes, error) {
+func (m *MockStoreUsecase) GetAllCatalogList(ctx context.Context, tipe string) ([]models.ProductClothes, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllCatalogList", ctx, tipe)
 	ret0, _ := ret[0].([]models.ProductClothes)
@@ -75,13 +75,13 @@ func (m *MockUsecase) GetAllCatalogList(ctx context.Context, tipe string) ([]mod
 }
 
 // GetAllCatalogList indicates an expected call of GetAllCatalogList.
-func (mr *MockUsecaseMockRecorder) GetAllCatalogList(ctx, tipe interface{}) *gomock.Call {
+func (mr *MockStoreUsecaseMockRecorder) GetAllCatalogList(ctx, tipe interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCatalogList", reflect.TypeOf((*MockUsecase)(nil).GetAllCatalogList), ctx, tipe)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCatalogList", reflect.TypeOf((*MockStoreUsecase)(nil).GetAllCatalogList), ctx, tipe)
 }
 
 // GetCatalogByID mocks base method.
-func (m *MockUsecase) GetCatalogByID(ctx context.Context, UNIQUEID string) (*models.ProductClothes, error) {
+func (m *MockStoreUsecase) GetCatalogByID(ctx context.Context, UNIQUEID string) (*models.ProductClothes, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCatalogByID", ctx, UNIQUEID)
 	ret0, _ := ret[0].(*models.ProductClothes)
@@ -90,13 +90,13 @@ func (m *MockUsecase) GetCatalogByID(ctx context.Context, UNIQUEID string) (*mod
 }
 
 // GetCatalogByID indicates an expected call of GetCatalogByID.
-func (mr *MockUsecaseMockRecorder) GetCatalogByID(ctx, UNIQUEID interface{}) *gomock.Call {
+func (mr *MockStoreUsecaseMockRecorder) GetCatalogByID(ctx, UNIQUEID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCatalogByID", reflect.TypeOf((*MockUsecase)(nil).GetCatalogByID), ctx, UNIQUEID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCatalogByID", reflect.TypeOf((*MockStoreUsecase)(nil).GetCatalogByID), ctx, UNIQUEID)
 }
 
 // GetOrderInfo mocks base method.
-func (m *MockUsecase) GetOrderInfo(ctx context.Context, request models.GetOrderInfoRequest) (models.Order, error) {
+func (m *MockStoreUsecase) GetOrderInfo(ctx context.Context, request models.GetOrderInfoRequest) (models.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOrderInfo", ctx, request)
 	ret0, _ := ret[0].(models.Order)
@@ -105,13 +105,13 @@ func (m *MockUsecase) GetOrderInfo(ctx context.Context, request models.GetOrderI
 }
 
 // GetOrderInfo indicates an expected call of GetOrderInfo.
-func (mr *MockUsecaseMockRecorder) GetOrderInfo(ctx, request interface{}) *gomock.Call {
+func (mr *MockStoreUsecaseMockRecorder) GetOrderInfo(ctx, request interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderInfo", reflect.TypeOf((*MockUsecase)(nil).GetOrderInfo), ctx, request)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderInfo", reflect.TypeOf((*MockStoreUsecase)(nil).GetOrderInfo), ctx, request)
 }
 
 // Order mocks base method.
-func (m *MockUsecase) Order(ctx context.Context, request models.OrderMenuRequest) (models.Order, error) {
+func (m *MockStoreUsecase) Order(ctx context.Context, request models.OrderMenuRequest) (models.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Order", ctx, request)
 	ret0, _ := ret[0].(models.Order)
@@ -120,13 +120,13 @@ func (m *MockUsecase) Order(ctx context.Context, request models.OrderMenuRequest
 }
 
 // Order indicates an expected call of Order.
-func (mr *MockUsecaseMockRecorder) Order(ctx, request interface{}) *gomock.Call {
+func (mr *MockStoreUsecaseMockRecorder) Order(ctx, request interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Order", reflect.TypeOf((*MockUsecase)(nil).Order), ctx, request)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Order", reflect.TypeOf((*MockStoreUsecase)(nil).Order), ctx, request)
 }
 
 // UpdateCatalog mocks base method.
-func (m *MockUsecase) UpdateCatalog(ctx context.Context, catalog models.ProductClothes) (models.ProductClothes, error) {
+func (m *MockStoreUsecase) UpdateCatalog(ctx context.Context, catalog models.ProductClothes) (models.ProductClothes, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateCatalog", ctx, catalog)
 	ret0, _ := ret[0].(models.ProductClothes)
@@ -135,7 +135,7 @@ func (m *MockUsecase) UpdateCatalog(ctx context.Context, catalog models.ProductC
 }
 
 // UpdateCatalog indicates an expected call of UpdateCatalog.
-func (mr *MockUsecaseMockRecorder) UpdateCatalog(ctx, catalog interface{}) *gomock.Call {
+func (mr *MockStoreUsecaseMockRecorder) UpdateCatalog(ctx, catalog interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCatalog", reflect.TypeOf((*MockUsecase)(nil).UpdateCatalog), ctx, catalog)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCatalog", reflect.TypeOf((*MockStoreUsecase)(nil).UpdateCatalog), ctx, catalog)
 }

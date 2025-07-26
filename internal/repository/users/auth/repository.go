@@ -5,6 +5,7 @@ import (
 
 	"github.com/takumifahri/RESTful-API-GO/internal/models"
 )
+//go:generate mockgen -package=mocks -mock_names=Repository=MockAuthRepository -destination=../../../mocks/auth_repository_mock.go -source=repository.go
 
 type Repository interface {
 	RegisterUser(ctx context.Context, userData models.User) (models.User, error)
